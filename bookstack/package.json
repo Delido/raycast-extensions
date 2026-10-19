@@ -65,7 +65,7 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^2.8.1",
+    "@raycast/api": "^2.8.2",
     "@raycast/utils": "^2.3.2",
     "node-html-markdown": "^2.0.0"
   },

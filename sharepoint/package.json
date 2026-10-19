@@ -1,0 +1,69 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "sharepoint",
+  "title": "SharePoint",
+  "description": "Search SharePoint documents, pages and sites with your own Microsoft 365 account",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Documentation",
+    "Productivity"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "search",
+      "title": "Search SharePoint",
+      "description": "Full-text search across SharePoint documents, pages and sites",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "tenantId",
+      "title": "Tenant ID",
+      "description": "Directory (tenant) ID of your Microsoft 365 tenant (Entra ID → Overview)",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "name": "clientId",
+      "title": "Client ID",
+      "description": "Application (client) ID of your Entra ID app registration – see docs/microsoft-app-registration.md",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "name": "scopeQuery",
+      "title": "Limit Search To",
+      "description": "Optional KQL restriction, e.g. path:\"https://contoso.sharepoint.com/sites/Docs\"",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "path:\"https://contoso.sharepoint.com/sites/Docs\""
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

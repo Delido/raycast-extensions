@@ -1,0 +1,206 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "mtr",
+  "title": "MTR",
+  "description": "WinMTR-style live traceroute with graphs, background monitoring, alerts, route change detection and an HTML report",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Developer Tools",
+    "System"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "trace",
+      "title": "Trace Route",
+      "description": "Live traceroute with loss and latency per hop, like WinMTR",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "target",
+          "placeholder": "host or IP",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "targets",
+      "title": "Monitored Targets",
+      "description": "Status, latency history, route and events of the monitored targets",
+      "mode": "view"
+    },
+    {
+      "name": "monitor",
+      "title": "Background Monitor",
+      "subtitle": "MTR",
+      "description": "Checks all monitored targets in the background, stores the history and notifies about outages and route changes. Enable it via the command's background refresh setting.",
+      "mode": "no-view",
+      "interval": "1m",
+      "preferences": [
+        {
+          "name": "checkEvery",
+          "title": "Check Every",
+          "description": "How often the targets are checked",
+          "type": "dropdown",
+          "required": false,
+          "default": "1",
+          "data": [
+            {
+              "title": "1 minute",
+              "value": "1"
+            },
+            {
+              "title": "2 minutes",
+              "value": "2"
+            },
+            {
+              "title": "5 minutes",
+              "value": "5"
+            },
+            {
+              "title": "10 minutes",
+              "value": "10"
+            },
+            {
+              "title": "15 minutes",
+              "value": "15"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "open-report",
+      "title": "Open MTR Report",
+      "description": "Opens the HTML report with graphs of all monitored targets in the browser",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "rounds",
+      "title": "Probes per Check",
+      "description": "Probe rounds per background check, one per second (routers often rate-limit faster probing)",
+      "type": "textfield",
+      "required": false,
+      "default": "10"
+    },
+    {
+      "name": "lossAlert",
+      "title": "Loss Alert (%)",
+      "description": "Packet loss to the target at which it counts as degraded",
+      "type": "textfield",
+      "required": false,
+      "default": "20"
+    },
+    {
+      "name": "latencyAlert",
+      "title": "Latency Alert (ms)",
+      "description": "Average latency to the target at which it counts as degraded",
+      "type": "textfield",
+      "required": false,
+      "default": "150"
+    },
+    {
+      "name": "notificationStyle",
+      "title": "Notifications",
+      "description": "How alerts are shown",
+      "type": "dropdown",
+      "required": false,
+      "default": "system",
+      "data": [
+        {
+          "title": "Windows notification",
+          "value": "system"
+        },
+        {
+          "title": "Raycast HUD",
+          "value": "hud"
+        }
+      ]
+    },
+    {
+      "name": "notifyRouteChange",
+      "title": "Alerts",
+      "label": "Notify about route changes",
+      "type": "checkbox",
+      "required": false,
+      "default": true,
+      "description": "Notify when the path to a target changes"
+    },
+    {
+      "name": "notifyRecovery",
+      "label": "Notify when a target is OK again",
+      "type": "checkbox",
+      "required": false,
+      "default": true,
+      "description": "Notify when a target is reachable again"
+    },
+    {
+      "name": "retentionDays",
+      "title": "Keep History (days)",
+      "type": "textfield",
+      "required": false,
+      "default": "7",
+      "description": "Older measurements are deleted"
+    },
+    {
+      "name": "traceInterval",
+      "title": "Live Trace Interval (ms)",
+      "description": "Time between probe rounds in “Trace Route”",
+      "type": "textfield",
+      "required": false,
+      "default": "1000"
+    },
+    {
+      "name": "timeout",
+      "title": "Timeout (ms)",
+      "description": "How long to wait for each reply",
+      "type": "textfield",
+      "required": false,
+      "default": "1000"
+    },
+    {
+      "name": "maxHops",
+      "title": "Max Hops",
+      "type": "textfield",
+      "required": false,
+      "default": "30",
+      "description": "Highest TTL that is probed"
+    },
+    {
+      "name": "packetSize",
+      "title": "Packet Size (bytes)",
+      "type": "textfield",
+      "required": false,
+      "default": "64",
+      "description": "Payload size of each ICMP echo request"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.1",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "build:helper": "node ../scripts/build-go-helper.mjs probe assets/mtr-probe.exe",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

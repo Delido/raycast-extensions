@@ -1,0 +1,109 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "paperless",
+  "title": "Paperless-ngx",
+  "description": "Search, edit, download and upload documents in Paperless-ngx",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Productivity",
+    "Data"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "search-documents",
+      "title": "Search Documents",
+      "description": "Full-text search across your Paperless documents",
+      "mode": "view"
+    },
+    {
+      "name": "inbox",
+      "title": "Inbox",
+      "description": "Documents with an inbox tag, ready to be sorted",
+      "mode": "view"
+    },
+    {
+      "name": "upload-document",
+      "title": "Upload Document",
+      "description": "Upload files to Paperless, optionally with title, correspondent, type and tags",
+      "mode": "view"
+    },
+    {
+      "name": "lock",
+      "title": "Lock Paperless",
+      "description": "Lock Paperless now and remove cached previews",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "serverUrl",
+      "title": "Server URL",
+      "description": "Base URL of your Paperless-ngx server, e.g. https://paperless.example.com",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "https://paperless.example.com"
+    },
+    {
+      "name": "autoLock",
+      "title": "Auto-Lock After",
+      "description": "Paperless locks again after this time without use. The API token is stored encrypted with your password.",
+      "type": "dropdown",
+      "required": false,
+      "default": "15",
+      "data": [
+        {
+          "title": "5 minutes",
+          "value": "5"
+        },
+        {
+          "title": "15 minutes",
+          "value": "15"
+        },
+        {
+          "title": "30 minutes",
+          "value": "30"
+        },
+        {
+          "title": "1 hour",
+          "value": "60"
+        },
+        {
+          "title": "4 hours",
+          "value": "240"
+        }
+      ]
+    },
+    {
+      "name": "downloadFolder",
+      "title": "Download Folder",
+      "description": "Where downloaded documents are saved (default: your Downloads folder)",
+      "type": "textfield",
+      "required": false,
+      "default": ""
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.1",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

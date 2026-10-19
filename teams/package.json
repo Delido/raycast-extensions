@@ -1,0 +1,115 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "teams",
+  "title": "Microsoft Teams",
+  "description": "Chat, call, search messages, set your status and join meetings in Microsoft Teams",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Communication",
+    "Productivity"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "search-people",
+      "title": "Search People",
+      "description": "Find colleagues and start a chat, call or video call",
+      "mode": "view"
+    },
+    {
+      "name": "search-chats",
+      "title": "Search Chats",
+      "description": "Recent chats: open them or send a message",
+      "mode": "view"
+    },
+    {
+      "name": "teams-channels",
+      "title": "Teams & Channels",
+      "description": "Browse your teams and channels",
+      "mode": "view"
+    },
+    {
+      "name": "search-messages",
+      "title": "Search Messages",
+      "description": "Full-text search in chat and channel messages",
+      "mode": "view"
+    },
+    {
+      "name": "set-status",
+      "title": "Set Status",
+      "description": "Set your Teams presence and status message",
+      "mode": "view"
+    },
+    {
+      "name": "meetings",
+      "title": "Upcoming Meetings",
+      "description": "Your upcoming meetings with one-click join",
+      "mode": "view"
+    },
+    {
+      "name": "join-next-meeting",
+      "title": "Join Next Meeting",
+      "description": "Join the current or next Teams meeting",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "tenantId",
+      "title": "Tenant ID",
+      "description": "Directory (tenant) ID of your Microsoft 365 tenant (Entra ID → Overview)",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "name": "clientId",
+      "title": "Client ID",
+      "description": "Application (client) ID of your Entra ID app registration – see docs/microsoft-app-registration.md",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "name": "openIn",
+      "title": "Open Links In",
+      "description": "Open chats, channels and meetings in the Teams app or in the browser",
+      "type": "dropdown",
+      "required": false,
+      "default": "app",
+      "data": [
+        {
+          "title": "Teams App",
+          "value": "app"
+        },
+        {
+          "title": "Browser",
+          "value": "browser"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

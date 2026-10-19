@@ -1,0 +1,124 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "power-plan",
+  "title": "Power Plan",
+  "description": "Switch Windows power plans and change them automatically while you play games",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "System"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "power-plans",
+      "title": "Power Plans",
+      "description": "Show and switch power plans, choose the plans for gaming and idle, control automatic switching",
+      "mode": "view"
+    },
+    {
+      "name": "game-detection",
+      "title": "Game Detection",
+      "description": "See which running programs count as games and adjust the rules",
+      "mode": "view"
+    },
+    {
+      "name": "auto",
+      "title": "Automatic Power Plan",
+      "subtitle": "Power Plan",
+      "description": "Runs in the background: game running → gaming plan, otherwise → idle plan. Enable it via the command's background refresh setting.",
+      "mode": "no-view",
+      "interval": "10s",
+      "preferences": [
+        {
+          "name": "cooldown",
+          "title": "Switch Back After (s)",
+          "description": "Seconds to wait after the last game closed before switching to the idle plan",
+          "type": "textfield",
+          "required": false,
+          "default": "60"
+        },
+        {
+          "name": "notificationStyle",
+          "title": "Notify on Switch",
+          "description": "Show a message when the plan changes automatically",
+          "type": "dropdown",
+          "required": false,
+          "default": "none",
+          "data": [
+            {
+              "title": "Off",
+              "value": "none"
+            },
+            {
+              "title": "Raycast HUD",
+              "value": "hud"
+            },
+            {
+              "title": "Windows notification",
+              "value": "system"
+            }
+          ]
+        },
+        {
+          "name": "enforce",
+          "title": "Other Programs",
+          "label": "Restore the automatic plan when something else changes it",
+          "description": "On (recommended): if a game or tool switches the plan, it is restored within about 10 seconds. To pick a plan yourself, activate it in “Power Plans” (pauses the automation for 1 hour) or pause the automation.",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        }
+      ]
+    },
+    {
+      "name": "toggle-auto",
+      "title": "Toggle Automatic Power Plan",
+      "description": "Turn automatic power plan switching on or off",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "detectFullscreen",
+      "title": "Game Detection",
+      "label": "Treat fullscreen apps as games",
+      "description": "Also count any fullscreen app in the foreground as a game (browsers and video players are ignored)",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    },
+    {
+      "name": "extraLibraries",
+      "title": "Additional Game Folders",
+      "description": "Folders whose programs count as games, separated by ; (e.g. D:\\Games). Steam, Epic, GOG, Xbox, Ubisoft, EA, Riot, Battle.net and Amazon libraries are detected automatically.",
+      "type": "textfield",
+      "required": false,
+      "default": ""
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.1",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "build:helper": "node ../scripts/build-go-helper.mjs helper assets/power-helper.exe",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

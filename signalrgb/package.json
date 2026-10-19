@@ -1,0 +1,219 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "signalrgb",
+  "title": "SignalRGB",
+  "description": "Live PC sensors, lighting effects, headset mic mute and battery, keyboard game mode and CS2 integration for SignalRGB",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "System",
+    "Media"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "pc-sensors",
+      "title": "PC Sensors",
+      "description": "Live temperatures, fans, load, clocks and power from SignalRGB",
+      "mode": "view"
+    },
+    {
+      "name": "effects",
+      "title": "Lighting Effects",
+      "description": "Browse and apply SignalRGB effects, presets, brightness and layouts",
+      "mode": "view"
+    },
+    {
+      "name": "next-effect",
+      "title": "Next Effect",
+      "description": "Apply the next SignalRGB effect",
+      "mode": "no-view"
+    },
+    {
+      "name": "previous-effect",
+      "title": "Previous Effect",
+      "description": "Apply the previous SignalRGB effect",
+      "mode": "no-view"
+    },
+    {
+      "name": "random-effect",
+      "title": "Random Effect",
+      "description": "Apply a random SignalRGB effect",
+      "mode": "no-view"
+    },
+    {
+      "name": "toggle-lighting",
+      "title": "Toggle Lighting",
+      "description": "Turn SignalRGB lighting on or off",
+      "mode": "no-view"
+    },
+    {
+      "name": "set-brightness",
+      "title": "Set Brightness",
+      "description": "Set the global SignalRGB brightness",
+      "mode": "no-view",
+      "arguments": [
+        {
+          "name": "brightness",
+          "placeholder": "0–100",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "audio-output",
+      "title": "Switch Audio Output",
+      "description": "Pick the default audio output",
+      "mode": "view"
+    },
+    {
+      "name": "next-audio-output",
+      "title": "Next Audio Output",
+      "description": "Cycle to the next audio output",
+      "mode": "no-view"
+    },
+    {
+      "name": "companion",
+      "title": "Headset & Companion",
+      "description": "Headset battery and mic, keyboard game mode, CS2 integration and the companion service",
+      "mode": "view"
+    },
+    {
+      "name": "companion-service",
+      "title": "Companion Service",
+      "subtitle": "SignalRGB",
+      "description": "Keeps the background helper running (mic mute mirror, battery alert, keyboard game mode, CS2, audio switching). Enable its background refresh once.",
+      "mode": "no-view",
+      "interval": "1m",
+      "preferences": [
+        {
+          "name": "micHardwareToWindows",
+          "title": "Mic Mute",
+          "label": "Headset mute button mutes the Windows microphone",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Discord, Teams and other apps then get no microphone signal"
+        },
+        {
+          "name": "micWindowsToHardware",
+          "label": "Windows mute also mutes the headset",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Mutes at device level, which apps with raw capture can't bypass"
+        },
+        {
+          "name": "batteryAlert",
+          "title": "Battery",
+          "label": "Play a sound when the battery is low",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Checked every minute, confirmed by re-reads before alerting"
+        },
+        {
+          "name": "batteryNotify",
+          "label": "Also show a Windows notification",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Notification in addition to the sound"
+        },
+        {
+          "name": "batteryThreshold",
+          "title": "Battery Alert Below (%)",
+          "type": "textfield",
+          "required": false,
+          "default": "20",
+          "description": "Alert when the battery is at or below this level"
+        },
+        {
+          "name": "batteryReAlert",
+          "title": "Repeat Alert Every (min)",
+          "type": "textfield",
+          "required": false,
+          "default": "30",
+          "description": "0 = only once until the headset is charged"
+        },
+        {
+          "name": "gameMode",
+          "title": "Keyboard",
+          "label": "Hardware game mode while a game runs",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Games are detected by the Power Plan extension (its background command must be enabled)"
+        },
+        {
+          "name": "cs2",
+          "title": "Counter-Strike 2",
+          "label": "Game State Integration for the CS2 Reactive effect",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Receiver on port 3000 and HTTPS bridge on 3443, only while cs2.exe runs"
+        }
+      ]
+    },
+    {
+      "name": "toggle-mic",
+      "title": "Toggle Microphone Mute",
+      "description": "Mute or unmute the Windows microphone (and the headset)",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "apiUrl",
+      "title": "SignalRGB API URL",
+      "description": "Local REST API of SignalRGB (lighting, layouts)",
+      "type": "textfield",
+      "required": false,
+      "default": "http://127.0.0.1:16038"
+    },
+    {
+      "name": "webPipeUrl",
+      "title": "SignalRGB WebPipe URL",
+      "description": "Local WebSocket of SignalRGB that provides the sensor data",
+      "type": "textfield",
+      "required": false,
+      "default": "ws://127.0.0.1:16036"
+    },
+    {
+      "name": "companionUrl",
+      "title": "Companion Service URL",
+      "description": "Address of the companion helper (audio switching); normally unchanged",
+      "type": "textfield",
+      "required": false,
+      "default": "http://127.0.0.1:3010"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.1",
+    "@raycast/utils": "^2.3.2",
+    "ws": "^8.18.3"
+  },
+  "scripts": {
+    "build": "ray build",
+    "build:helper": "node ../scripts/build-go-helper.mjs helper assets/signal-helper.exe --gui",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0",
+    "@types/ws": "^8.18.1",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,37 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /bookstack
+      - /checkmk
+      - /mtr
+      - /onedev
+      - /paperless
+      - /power-plan
+      - /sharepoint
+      - /signalrgb
+      - /teams
+    schedule:
+      interval: monthly
+    groups:
+      raycast:
+        patterns: ["@raycast/*"]
+      dev-dependencies:
+        dependency-type: development
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: gomod
+    directories:
+      - /mtr/probe
+      - /power-plan/helper
+      - /signalrgb/helper
+    schedule:
+      interval: monthly
+    groups:
+      go:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

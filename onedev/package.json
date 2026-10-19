@@ -1,0 +1,77 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "onedev",
+  "title": "OneDev",
+  "description": "Search projects, issues, pull requests and builds on your OneDev server",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Developer Tools"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "search-projects",
+      "title": "Search Projects",
+      "description": "Search OneDev projects",
+      "mode": "view"
+    },
+    {
+      "name": "search-issues",
+      "title": "Search Issues",
+      "description": "Search OneDev issues",
+      "mode": "view"
+    },
+    {
+      "name": "search-pull-requests",
+      "title": "Search Pull Requests",
+      "description": "Search OneDev pull requests",
+      "mode": "view"
+    },
+    {
+      "name": "search-builds",
+      "title": "Search Builds",
+      "description": "Search OneDev builds",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "serverUrl",
+      "title": "Server URL",
+      "description": "Base URL of your OneDev server, e.g. https://onedev.example.com",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "https://onedev.example.com"
+    },
+    {
+      "name": "accessToken",
+      "title": "Access Token",
+      "description": "Create one in OneDev under My Account → Access Tokens",
+      "type": "password",
+      "required": true
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.1",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0",
+    "eslint": "^10.12.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

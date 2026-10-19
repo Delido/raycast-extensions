@@ -1,0 +1,224 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "checkmk",
+  "title": "Checkmk",
+  "description": "Search hosts and services in Checkmk, handle problems and get notified about new ones",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Developer Tools",
+    "System"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "problems",
+      "title": "Show Problems",
+      "description": "Current host and service problems",
+      "mode": "view"
+    },
+    {
+      "name": "search-hosts",
+      "title": "Search Hosts",
+      "description": "Search monitored hosts",
+      "mode": "view"
+    },
+    {
+      "name": "search-services",
+      "title": "Search Services",
+      "description": "Search monitored services",
+      "mode": "view"
+    },
+    {
+      "name": "monitor",
+      "title": "Problem Monitor",
+      "subtitle": "Checkmk",
+      "description": "Checks Checkmk in the background and sends a notification for new problems. Enable it via the command's background refresh setting.",
+      "mode": "no-view",
+      "interval": "1m",
+      "preferences": [
+        {
+          "name": "checkEvery",
+          "title": "Check Every",
+          "description": "How often the monitor queries Checkmk",
+          "type": "dropdown",
+          "required": false,
+          "default": "1",
+          "data": [
+            {
+              "title": "1 minute",
+              "value": "1"
+            },
+            {
+              "title": "2 minutes",
+              "value": "2"
+            },
+            {
+              "title": "5 minutes",
+              "value": "5"
+            },
+            {
+              "title": "10 minutes",
+              "value": "10"
+            },
+            {
+              "title": "15 minutes",
+              "value": "15"
+            },
+            {
+              "title": "30 minutes",
+              "value": "30"
+            }
+          ]
+        },
+        {
+          "name": "minSeverity",
+          "title": "Minimum Severity",
+          "description": "Which service states trigger a notification",
+          "type": "dropdown",
+          "required": false,
+          "default": "crit",
+          "data": [
+            {
+              "title": "CRIT only",
+              "value": "crit"
+            },
+            {
+              "title": "CRIT + UNKNOWN",
+              "value": "crit-unknown"
+            },
+            {
+              "title": "WARN, CRIT + UNKNOWN",
+              "value": "warn"
+            }
+          ]
+        },
+        {
+          "name": "includeHosts",
+          "title": "Hosts",
+          "label": "Notify when hosts go DOWN / UNREACHABLE",
+          "description": "Notify about host problems",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "ignoreHandled",
+          "title": "Handled Problems",
+          "label": "Ignore acknowledged problems and downtimes",
+          "description": "Skip problems that are acknowledged or in a scheduled downtime",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "notifyRecovery",
+          "title": "Recoveries",
+          "label": "Notify when problems recover",
+          "description": "Send a notification when a problem is gone",
+          "type": "checkbox",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "hostFilter",
+          "title": "Only Hosts Matching",
+          "description": "Optional regular expression (case-insensitive) for host names",
+          "type": "textfield",
+          "required": false,
+          "placeholder": "^(web|db)-"
+        },
+        {
+          "name": "serviceFilter",
+          "title": "Only Services Matching",
+          "description": "Optional regular expression (case-insensitive) for service names",
+          "type": "textfield",
+          "required": false,
+          "placeholder": "CPU|Filesystem|HTTP"
+        },
+        {
+          "name": "serviceExclude",
+          "title": "Exclude Services Matching",
+          "description": "Optional regular expression (case-insensitive) for services to ignore",
+          "type": "textfield",
+          "required": false,
+          "placeholder": "NTP|Check_MK Discovery"
+        },
+        {
+          "name": "notificationStyle",
+          "title": "Notification",
+          "description": "How to notify about problems",
+          "type": "dropdown",
+          "required": false,
+          "default": "system",
+          "data": [
+            {
+              "title": "System notification",
+              "value": "system"
+            },
+            {
+              "title": "Raycast HUD",
+              "value": "hud"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "preferences": [
+    {
+      "name": "siteUrl",
+      "title": "Site URL",
+      "description": "URL of your Checkmk site including the site name, e.g. https://monitoring.example.com/mysite",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "https://monitoring.example.com/mysite"
+    },
+    {
+      "name": "username",
+      "title": "Username",
+      "description": "Checkmk (automation) user",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "automation"
+    },
+    {
+      "name": "secret",
+      "title": "Automation Secret / Password",
+      "description": "Automation secret of the user (Setup → Users → Automation secret)",
+      "type": "password",
+      "required": true
+    },
+    {
+      "name": "allowInsecure",
+      "title": "TLS",
+      "label": "Allow self-signed certificates",
+      "description": "Skip TLS certificate validation (only for internal servers)",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

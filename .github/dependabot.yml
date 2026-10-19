@@ -15,12 +15,12 @@ updates:
     schedule:
       interval: monthly
     ignore:
-      # Raycast runs extensions on Node 22 with React 19.0, and @raycast/eslint-config
-      # supports TypeScript < 6.1. Bigger jumps break the build.
+      # Raycast runs extensions on Node 22, and @raycast/eslint-config supports
+      # TypeScript < 6.1. Bigger jumps break the build.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # Must match the exact version pinned by @raycast/api, otherwise two React type copies clash.
       - dependency-name: "@types/react"
-        update-types: ["version-update:semver-major", "version-update:semver-minor"]
       - dependency-name: typescript
         update-types: ["version-update:semver-major"]
     groups:

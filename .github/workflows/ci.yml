@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        extension: [bookstack, checkmk, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, teams]
+        extension: [amp, bookstack, checkmk, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, teams]
     defaults:
       run:
         working-directory: ${{ matrix.extension }}

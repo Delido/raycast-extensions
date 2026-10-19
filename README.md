@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Raycast](https://img.shields.io/badge/Raycast-Windows%20%7C%20macOS-FF6363)
 
-Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für Arbeit, Homelab und Gaming-PC. Jede Extension ist eigenständig, du installierst nur die, die du brauchst.
+Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für Arbeit, Homelab, Game-Server und Gaming-PC. Jede Extension ist eigenständig, du installierst nur die, die du brauchst.
 
 ## Extensions
 
@@ -18,6 +18,7 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für Arbeit, Homela
 | <img src="paperless/assets/icon.png" width="28" alt="paperless"> | **[Paperless-ngx](paperless/)** | Dokumente suchen, bearbeiten, herunterladen und hochladen, mit Passwortsperre | Windows, macOS |
 | <img src="signalrgb/assets/icon.png" width="28" alt="signalrgb"> | **[SignalRGB](signalrgb/)** | PC-Sensoren live, Beleuchtung, Headset-Mute und -Akku, Tastatur-Game-Mode, CS2-Integration, Audioausgabe | Windows |
 | <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
+| <img src="amp/assets/extension-icon.png" width="28" alt="amp"> | **[AMP](amp/)** | CubeCoders-AMP-Game-Server steuern: Start/Stop, Konsole, Spieler, Backups, neue Server | Windows, macOS |
 | <img src="power-plan/assets/icon.png" width="28" alt="power-plan"> | **[Power Plan](power-plan/)** | Energiesparplan wechseln, automatisch Höchstleistung beim Spielen | Windows |
 
 Was jede Extension genau kann und wie sie eingerichtet wird, steht in ihrer eigenen README.

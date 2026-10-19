@@ -1,0 +1,76 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "amp",
+  "title": "AMP",
+  "description": "Control your CubeCoders AMP game server instances: start, stop, restart, update and use the console",
+  "icon": "extension-icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Developer Tools",
+    "Applications"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows",
+    "macOS"
+  ],
+  "commands": [
+    {
+      "name": "manage-servers",
+      "title": "Manage Servers",
+      "subtitle": "AMP",
+      "description": "List AMP instances with status and control them",
+      "mode": "view"
+    },
+    {
+      "name": "create-server",
+      "title": "Create Game Server",
+      "subtitle": "AMP",
+      "description": "Deploy a new game server instance from AMP's application list",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "serverUrl",
+      "title": "Panel URL",
+      "description": "URL of your AMP panel (ADS), e.g. http://192.168.1.10:8080",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "http://amp.example.com:8080"
+    },
+    {
+      "name": "username",
+      "title": "Username",
+      "description": "AMP login name",
+      "type": "textfield",
+      "required": true
+    },
+    {
+      "name": "password",
+      "title": "Password",
+      "description": "AMP password",
+      "type": "password",
+      "required": true
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.0",
+    "@raycast/utils": "^2.3.2"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "eslint": "^9.22.0",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "publish": "npx @raycast/api@latest publish"
+  }
+}

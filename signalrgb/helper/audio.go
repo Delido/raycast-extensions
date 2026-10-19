@@ -45,10 +45,11 @@ func mustGUID(s string) windows.GUID {
 	return g
 }
 
+// vcall calls method `index` of a COM object: the object's first word points to its
+// vtable. Reading it through &obj avoids converting a uintptr back to a pointer.
 func vcall(obj uintptr, index int, args ...uintptr) uintptr {
-	vtbl := *(*uintptr)(unsafe.Pointer(obj))
-	fn := *(*uintptr)(unsafe.Pointer(vtbl + uintptr(index)*unsafe.Sizeof(uintptr(0))))
-	r, _, _ := syscall.SyscallN(fn, append([]uintptr{obj}, args...)...)
+	vtbl := **(***[64]uintptr)(unsafe.Pointer(&obj))
+	r, _, _ := syscall.SyscallN(vtbl[index], append([]uintptr{obj}, args...)...)
 	return r
 }
 

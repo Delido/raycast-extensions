@@ -1,0 +1,107 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "snipeit",
+  "title": "Snipe-IT",
+  "description": "Search assets, users, licenses and accessories in Snipe-IT, check assets in and out",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Productivity",
+    "System"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "search-assets",
+      "title": "Search Assets",
+      "description": "Search hardware by name, asset tag, serial, model or assigned user",
+      "mode": "view"
+    },
+    {
+      "name": "lookup-asset",
+      "title": "Look up Asset",
+      "description": "Open an asset directly by asset tag or serial number",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "query",
+          "placeholder": "Asset tag or serial",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "search-users",
+      "title": "Search Users",
+      "description": "Find users and see everything assigned to them",
+      "mode": "view"
+    },
+    {
+      "name": "search-licenses",
+      "title": "Search Licenses",
+      "description": "Licenses with free seats and expiration",
+      "mode": "view"
+    },
+    {
+      "name": "inventory",
+      "title": "Accessories & Consumables",
+      "description": "Stock of accessories and consumables, low stock highlighted",
+      "mode": "view"
+    },
+    {
+      "name": "audit-due",
+      "title": "Audits Due",
+      "description": "Assets with an overdue or upcoming audit",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "baseUrl",
+      "title": "Snipe-IT URL",
+      "description": "Base URL of your Snipe-IT instance, e.g. https://assets.example.com",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "https://assets.example.com"
+    },
+    {
+      "name": "apiToken",
+      "title": "API Token",
+      "description": "Personal API key (Snipe-IT: your profile → Manage API Keys)",
+      "type": "password",
+      "required": true
+    },
+    {
+      "name": "allowInsecure",
+      "title": "TLS",
+      "label": "Allow self-signed certificates",
+      "description": "Skip TLS certificate validation (only for internal servers)",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

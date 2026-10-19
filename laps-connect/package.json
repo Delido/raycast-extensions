@@ -1,0 +1,191 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "laps-connect",
+  "title": "LAPS Connect",
+  "description": "Admin only: find a user's computer via WireGuard (UniFi), fetch its Windows LAPS password from Entra and connect via SSH or RDP",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Developer Tools",
+    "Security"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows",
+    "macOS"
+  ],
+  "commands": [
+    {
+      "name": "connect",
+      "title": "LAPS Connect",
+      "description": "Find a user's computer and connect with its LAPS password",
+      "mode": "view"
+    },
+    {
+      "name": "lock",
+      "title": "Lock LAPS Connect",
+      "description": "Lock LAPS Connect now",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "tenantId",
+      "title": "Tenant ID",
+      "description": "Directory (tenant) ID – see docs/laps-connect-setup.md",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "name": "clientId",
+      "title": "Client ID",
+      "description": "Application (client) ID of the \"Raycast LAPS Connect\" app registration",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "00000000-0000-0000-0000-000000000000"
+    },
+    {
+      "name": "unifiUrl",
+      "title": "UniFi URL",
+      "description": "Address of the UniFi gateway running the WireGuard server",
+      "type": "textfield",
+      "required": true,
+      "placeholder": "https://192.168.1.1"
+    },
+    {
+      "name": "autoLock",
+      "title": "Auto-Lock After",
+      "description": "LAPS Connect locks again after this time without use. The UniFi API key is stored encrypted with your LAPS Connect password.",
+      "type": "dropdown",
+      "required": false,
+      "default": "5",
+      "data": [
+        {
+          "title": "2 minutes",
+          "value": "2"
+        },
+        {
+          "title": "5 minutes",
+          "value": "5"
+        },
+        {
+          "title": "15 minutes",
+          "value": "15"
+        },
+        {
+          "title": "30 minutes",
+          "value": "30"
+        },
+        {
+          "title": "1 hour",
+          "value": "60"
+        }
+      ]
+    },
+    {
+      "name": "signOutOnLock",
+      "title": "On Lock",
+      "label": "Also sign out of Microsoft",
+      "description": "Every unlock then needs a fresh Microsoft sign-in (incl. MFA) before a LAPS password can be read",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    },
+    {
+      "name": "unifiInsecure",
+      "title": "UniFi TLS",
+      "label": "Allow self-signed certificate",
+      "description": "UniFi gateways use a self-signed certificate by default",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "jumpHost",
+      "title": "Jump Host",
+      "description": "Optional SSH jump host for SSH and RDP: an alias from ~/.ssh/config or user@host:port",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "bastion"
+    },
+    {
+      "name": "nameFilter",
+      "title": "WireGuard Name Filter",
+      "description": "Regular expression for WireGuard clients to show (default: X-NAME without suffix)",
+      "type": "textfield",
+      "required": false,
+      "default": "^.-[^-]+$"
+    },
+    {
+      "name": "deviceSuffix",
+      "title": "Windows Device Suffix",
+      "description": "Computer name = WireGuard name + this suffix",
+      "type": "textfield",
+      "required": false,
+      "default": "-LAP"
+    },
+    {
+      "name": "clipboardSeconds",
+      "title": "Clear Clipboard After",
+      "description": "The LAPS password is removed from the clipboard after this time",
+      "type": "dropdown",
+      "required": false,
+      "default": "30",
+      "data": [
+        {
+          "title": "15 seconds",
+          "value": "15"
+        },
+        {
+          "title": "30 seconds",
+          "value": "30"
+        },
+        {
+          "title": "60 seconds",
+          "value": "60"
+        }
+      ]
+    },
+    {
+      "name": "terminal",
+      "title": "Terminal",
+      "description": "Terminal for SSH sessions",
+      "type": "dropdown",
+      "required": false,
+      "default": "wt",
+      "data": [
+        {
+          "title": "Windows Terminal",
+          "value": "wt"
+        },
+        {
+          "title": "Windows Terminal Preview",
+          "value": "wtpreview"
+        },
+        {
+          "title": "PowerShell Window",
+          "value": "powershell"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

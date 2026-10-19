@@ -1,0 +1,102 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "keep-awake",
+  "title": "Keep Awake",
+  "description": "Keep the computer awake (no sleep, display stays on) and optionally keep the Teams status available",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "System",
+    "Productivity"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows",
+    "macOS"
+  ],
+  "commands": [
+    {
+      "name": "keep-awake",
+      "title": "Keep Awake",
+      "description": "Keep the computer awake for a while or indefinitely, show the status and stop it",
+      "mode": "view"
+    },
+    {
+      "name": "toggle-keep-awake",
+      "title": "Toggle Keep Awake",
+      "description": "Switch Keep Awake on (default duration) or off – good for a hotkey",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "teamsPresence",
+      "title": "Teams Presence",
+      "label": "Keep the Teams status available",
+      "description": "Presses the unused F15 key after 60 seconds without input so Teams (and other apps) do not switch to Away. This also prevents the automatic screen lock – lock manually when you leave.",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "keepDisplayOn",
+      "title": "Display",
+      "label": "Keep the display on",
+      "description": "Otherwise only sleep is prevented and the display may turn off",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "defaultDuration",
+      "title": "Default Duration",
+      "description": "Duration used by \"Toggle Keep Awake\"",
+      "type": "dropdown",
+      "required": false,
+      "default": "0",
+      "data": [
+        {
+          "title": "Indefinitely",
+          "value": "0"
+        },
+        {
+          "title": "30 minutes",
+          "value": "30"
+        },
+        {
+          "title": "1 hour",
+          "value": "60"
+        },
+        {
+          "title": "2 hours",
+          "value": "120"
+        },
+        {
+          "title": "4 hours",
+          "value": "240"
+        },
+        {
+          "title": "8 hours",
+          "value": "480"
+        }
+      ]
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "ssh",
+  "title": "SSH Sessions",
+  "description": "Find your SSH hosts and open them in the terminal; share host lists centrally (OneDev, HTTPS, file share) while keys stay local",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Developer Tools",
+    "System"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "search-hosts",
+      "title": "Search SSH Hosts",
+      "description": "Search local and team SSH hosts and connect in the terminal",
+      "mode": "view"
+    },
+    {
+      "name": "manage-sources",
+      "title": "Manage SSH Sources",
+      "description": "Configure central host sources (OneDev, HTTPS, file share) and personal defaults",
+      "mode": "view"
+    },
+    {
+      "name": "sync-sources",
+      "title": "Sync SSH Sources",
+      "description": "Download team host lists from the configured sources",
+      "mode": "no-view",
+      "interval": "1h"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "terminal",
+      "title": "Terminal",
+      "description": "Terminal used to open SSH sessions",
+      "type": "dropdown",
+      "required": false,
+      "default": "auto",
+      "data": [
+        {
+          "title": "Automatic (Windows Terminal / Terminal.app)",
+          "value": "auto"
+        },
+        {
+          "title": "Windows Terminal (default \"wt\" alias)",
+          "value": "wt"
+        },
+        {
+          "title": "Windows Terminal Preview",
+          "value": "wtpreview"
+        },
+        {
+          "title": "Windows Terminal Canary",
+          "value": "wtcanary"
+        },
+        {
+          "title": "PowerShell Window (Windows)",
+          "value": "powershell"
+        },
+        {
+          "title": "Command Prompt (Windows)",
+          "value": "cmd"
+        },
+        {
+          "title": "Terminal.app (macOS)",
+          "value": "terminal"
+        },
+        {
+          "title": "iTerm (macOS)",
+          "value": "iterm"
+        }
+      ]
+    },
+    {
+      "name": "wtProfile",
+      "title": "Windows Terminal Profile",
+      "description": "Optional profile name for new tabs, e.g. \"PowerShell\"",
+      "type": "textfield",
+      "required": false
+    },
+    {
+      "name": "browser",
+      "title": "Tunnel Browser",
+      "description": "Browser used for “Open in Browser via Tunnel” (separate profile, SOCKS proxy)",
+      "type": "dropdown",
+      "required": false,
+      "default": "edge",
+      "data": [
+        {
+          "title": "Microsoft Edge",
+          "value": "edge"
+        },
+        {
+          "title": "Google Chrome",
+          "value": "chrome"
+        }
+      ]
+    },
+    {
+      "name": "syncMinutes",
+      "title": "Auto Sync",
+      "description": "How often team sources are refreshed when you open the host list",
+      "type": "dropdown",
+      "required": false,
+      "default": "60",
+      "data": [
+        {
+          "title": "Every 15 minutes",
+          "value": "15"
+        },
+        {
+          "title": "Every hour",
+          "value": "60"
+        },
+        {
+          "title": "Every 4 hours",
+          "value": "240"
+        },
+        {
+          "title": "Only manually",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "name": "blockRisky",
+      "title": "Security",
+      "label": "Disable command-executing options from team sources",
+      "description": "Comments out ProxyCommand, LocalCommand, Match exec, KnownHostsCommand etc. in downloaded files (ProxyJump stays allowed)",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2",
+    "ssh2": "^1.17.0"
+  },
+  "scripts": {
+    "build": "npm run vendor && ray build",
+    "dev": "npm run vendor && ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "vendor": "node scripts/vendor-ssh2.mjs"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "@types/ssh2": "^1.15.6",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

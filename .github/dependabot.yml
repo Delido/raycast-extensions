@@ -5,12 +5,16 @@ updates:
       - /amp
       - /bookstack
       - /checkmk
+      - /keep-awake
+      - /laps-connect
       - /mtr
       - /onedev
       - /paperless
       - /power-plan
       - /sharepoint
       - /signalrgb
+      - /snipeit
+      - /ssh
       - /teams
     schedule:
       interval: monthly

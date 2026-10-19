@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Raycast](https://img.shields.io/badge/Raycast-Windows%20%7C%20macOS-FF6363)
 
-Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für Arbeit, Homelab, Game-Server und Gaming-PC. Jede Extension ist eigenständig, du installierst nur die, die du brauchst.
+Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Alltag, Homelab, Game-Server und Gaming-PC. Jede Extension ist eigenständig, du installierst nur die, die du brauchst.
 
 ## Extensions
 
@@ -15,6 +15,10 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für Arbeit, Homela
 | <img src="checkmk/assets/icon.png" width="28" alt="checkmk"> | **[Checkmk](checkmk/)** | Hosts und Services suchen, Probleme bestätigen, Benachrichtigung bei neuen Problemen | Windows, macOS |
 | <img src="sharepoint/assets/icon.png" width="28" alt="sharepoint"> | **[SharePoint](sharepoint/)** | SharePoint-Seiten und Dokumente durchsuchen | Windows, macOS |
 | <img src="teams/assets/icon.png" width="28" alt="teams"> | **[Microsoft Teams](teams/)** | Personen, Chats, Kanäle, Nachrichten, Status, Meetings | Windows, macOS |
+| <img src="snipeit/assets/icon.png" width="28" alt="snipeit"> | **[Snipe-IT](snipeit/)** | Assets, Benutzer, Lizenzen und Zubehör suchen, Assets aus- und einchecken, Inventur und fällige Audits | Windows, macOS |
+| <img src="ssh/assets/icon.png" width="28" alt="ssh"> | **[SSH Sessions](ssh/)** | SSH-Hosts finden und verbinden, zentrale Host-Listen, SOCKS-Tunnel mit Browser, SFTP-Dateibrowser | Windows, macOS |
+| <img src="laps-connect/assets/icon.png" width="28" alt="laps-connect"> | **[LAPS Connect](laps-connect/)** | Für Admins: WireGuard-IP eines Rechners finden, Windows-LAPS-Passwort aus Entra holen, per SSH oder RDP verbinden, mit Passwortsperre | Windows, macOS |
+| <img src="keep-awake/assets/icon.png" width="28" alt="keep-awake"> | **[Keep Awake](keep-awake/)** | Rechner wach halten, optional Teams-Status auf Verfügbar | Windows, macOS |
 | <img src="paperless/assets/icon.png" width="28" alt="paperless"> | **[Paperless-ngx](paperless/)** | Dokumente suchen, bearbeiten, herunterladen und hochladen, mit Passwortsperre | Windows, macOS |
 | <img src="signalrgb/assets/icon.png" width="28" alt="signalrgb"> | **[SignalRGB](signalrgb/)** | PC-Sensoren live, Beleuchtung, Headset-Mute und -Akku, Tastatur-Game-Mode, CS2-Integration, Audioausgabe | Windows |
 | <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
@@ -57,8 +61,8 @@ npm run dev     # nach "ready" mit Ctrl+C beenden
 ## Sicherheit
 
 - Zugangsdaten (Tokens, Passwörter) liegen nur in Raycast, als Passwortfelder im verschlüsselten Raycast-Speicher, nie im Code oder im Repo.
-- **Paperless-ngx** speichert sein API-Token zusätzlich mit einem eigenen Passwort verschlüsselt und sperrt sich nach einer einstellbaren Zeit.
-- SharePoint und Teams melden sich per OAuth mit deinem eigenen Microsoft-Konto an. Sie sehen nur, worauf du ohnehin Zugriff hast.
+- **Paperless-ngx** und **LAPS Connect** speichern ihre Zugangsdaten zusätzlich mit einem eigenen Passwort verschlüsselt und sperren sich nach einer einstellbaren Zeit.
+- SharePoint, Teams und LAPS Connect melden sich per OAuth mit deinem eigenen Microsoft-Konto an. Sie sehen nur, worauf du ohnehin Zugriff hast.
 - Die Windows-Helfer lauschen nur auf `127.0.0.1`.
 
 ## Tastenkürzel
@@ -82,6 +86,7 @@ raycast://extensions/mendyka/<extension>/<befehl>
 Weitere Dokumentation in [docs/](docs/):
 
 - [Microsoft-App-Registrierung](docs/microsoft-app-registration.md) für SharePoint und Teams
+- [Einrichtung von LAPS Connect](docs/laps-connect-setup.md): Entra-App und UniFi-API-Key
 - [SignalRGB-Schnittstellen](docs/signalrgb-schnittstellen.md): lokale REST-API, WebPipe (QWebChannel) und Mobile Remote
 
 ## Lizenz

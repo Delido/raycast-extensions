@@ -391,36 +391,127 @@ func parseGSI(p map[string]any) map[string]any {
 	}
 }
 
-// ensureCerts reuses certificates from data/certs, else copies SignalCompanion's
-// (already trusted by SignalRGB), else generates a new CA + 127.0.0.1 cert.
-func ensureCerts(dir string) (chain, key, ca []byte, err error) {
+// knownFolder resolves a Windows known folder via the shell API. Environment variables like
+// %APPDATA% are not always set when Raycast starts the helper.
+func knownFolder(id *windows.KNOWNFOLDERID, env string) string {
+	if p, err := windows.KnownFolderPath(id, 0); err == nil && p != "" {
+		return p
+	}
+	return os.Getenv(env)
+}
+
+// cacertPaths finds SignalRGB's Ultralight trust bundles.
+func cacertPaths() []string {
+	var paths []string
+	for _, base := range []string{
+		knownFolder(windows.FOLDERID_LocalAppData, "LOCALAPPDATA"),
+		knownFolder(windows.FOLDERID_ProgramFiles, "PROGRAMFILES"),
+		knownFolder(windows.FOLDERID_ProgramFilesX86, "PROGRAMFILES(X86)"),
+	} {
+		if base != "" {
+			found, _ := filepath.Glob(filepath.Join(base, "VortxEngine", "app-*", "Signal-x64", "cacert.pem"))
+			paths = append(paths, found...)
+		}
+	}
+	return paths
+}
+
+// certDERs returns the DER bytes of all certificates in a PEM bundle.
+func certDERs(data []byte) [][]byte {
+	var out [][]byte
+	for {
+		var block *pem.Block
+		block, data = pem.Decode(data)
+		if block == nil {
+			return out
+		}
+		if block.Type == "CERTIFICATE" {
+			out = append(out, block.Bytes)
+		}
+	}
+}
+
+// trustedIn lists the bundles that already contain the CA (compared by DER, so line endings don't matter).
+func trustedIn(ca []byte, paths []string) []string {
+	ders := certDERs(ca)
+	if len(ders) == 0 {
+		return nil
+	}
+	var hits []string
+	for _, p := range paths {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		for _, d := range certDERs(data) {
+			if bytes.Equal(d, ders[0]) {
+				hits = append(hits, p)
+				break
+			}
+		}
+	}
+	return hits
+}
+
+type certSet struct{ chain, key, ca []byte }
+
+func readCerts(dir string) (certSet, bool) {
+	ca, e1 := os.ReadFile(filepath.Join(dir, "ca.pem"))
+	ch, e2 := os.ReadFile(filepath.Join(dir, "server_chain.pem"))
+	k, e3 := os.ReadFile(filepath.Join(dir, "server_key.pem"))
+	if errors.Join(e1, e2, e3) != nil {
+		return certSet{}, false
+	}
+	if _, err := tls.X509KeyPair(ch, k); err != nil {
+		return certSet{}, false
+	}
+	return certSet{ch, k, ca}, true
+}
+
+func writeCerts(dir string, c certSet) {
 	_ = os.MkdirAll(dir, 0o755)
-	read := func(d string) ([]byte, []byte, []byte, error) {
-		ca, e1 := os.ReadFile(filepath.Join(d, "ca.pem"))
-		ch, e2 := os.ReadFile(filepath.Join(d, "server_chain.pem"))
-		k, e3 := os.ReadFile(filepath.Join(d, "server_key.pem"))
-		return ch, k, ca, errors.Join(e1, e2, e3)
+	_ = os.WriteFile(filepath.Join(dir, "ca.pem"), c.ca, 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "server_chain.pem"), c.chain, 0o644)
+	_ = os.WriteFile(filepath.Join(dir, "server_key.pem"), c.key, 0o600)
+}
+
+// ensureCerts picks the certificates for the HTTPS bridge. Preferred is a set whose CA SignalRGB
+// already trusts (own ones, or SignalCompanion's), so no SignalRGB restart is needed. Otherwise
+// an existing set is used, or a new CA is generated (patchCACert then adds it to SignalRGB).
+func ensureCerts(dir string) (chain, key, ca []byte, err error) {
+	companion := filepath.Join(knownFolder(windows.FOLDERID_RoamingAppData, "APPDATA"), "SignalCompanion", "certs")
+	paths := cacertPaths()
+	var first *certSet
+	firstDir := ""
+	for _, d := range []string{dir, companion} {
+		c, ok := readCerts(d)
+		if !ok {
+			continue
+		}
+		if len(trustedIn(c.ca, paths)) > 0 {
+			if d != dir {
+				writeCerts(dir, c)
+				logf("cs2: using SignalCompanion certificates (already trusted by SignalRGB)")
+			}
+			return c.chain, c.key, c.ca, nil
+		}
+		if first == nil {
+			first, firstDir = &c, d
+		}
 	}
-	if ch, k, ca, err := read(dir); err == nil {
-		return ch, k, ca, nil
+	if first != nil {
+		if firstDir != dir {
+			writeCerts(dir, *first)
+		}
+		return first.chain, first.key, first.ca, nil
 	}
-	old := filepath.Join(os.Getenv("APPDATA"), "SignalCompanion", "certs")
-	if ch, k, ca, err := read(old); err == nil {
-		_ = os.WriteFile(filepath.Join(dir, "ca.pem"), ca, 0o644)
-		_ = os.WriteFile(filepath.Join(dir, "server_chain.pem"), ch, 0o644)
-		_ = os.WriteFile(filepath.Join(dir, "server_key.pem"), k, 0o600)
-		logf("cs2: reusing SignalCompanion certificates")
-		return ch, k, ca, nil
-	}
-	ch, k, ca, err := generateCerts()
+	ch, k, newCA, err := generateCerts()
 	if err != nil {
 		return nil, nil, nil, err
 	}
-	_ = os.WriteFile(filepath.Join(dir, "ca.pem"), ca, 0o644)
-	_ = os.WriteFile(filepath.Join(dir, "server_chain.pem"), ch, 0o644)
-	_ = os.WriteFile(filepath.Join(dir, "server_key.pem"), k, 0o600)
+	writeCerts(dir, certSet{ch, k, newCA})
 	logf("cs2: generated new local CA")
-	return ch, k, ca, nil
+	return ch, k, newCA, nil
 }
 
 func generateCerts() (chain, key, ca []byte, err error) {
@@ -468,15 +559,22 @@ func generateCerts() (chain, key, ca []byte, err error) {
 // re-trusted. Returns the trusted files and whether a file was changed.
 func patchCACert(ca []byte) (trusted []string, changed bool) {
 	trusted = []string{}
-	var paths []string
-	for _, env := range []string{"LOCALAPPDATA", "PROGRAMFILES", "PROGRAMFILES(X86)"} {
-		if base := os.Getenv(env); base != "" {
-			found, _ := filepath.Glob(filepath.Join(base, "VortxEngine", "app-*", "Signal-x64", "cacert.pem"))
-			paths = append(paths, found...)
-		}
+	paths := cacertPaths()
+	if len(paths) == 0 {
+		logf("cs2: no SignalRGB cacert.pem found, the effect can't trust the HTTPS bridge")
+		return trusted, false
+	}
+	already := map[string]bool{}
+	for _, p := range trustedIn(ca, paths) {
+		already[p] = true
 	}
 	block := append([]byte(caMarker), ca...)
 	for _, p := range paths {
+		if already[p] {
+			trusted = append(trusted, p)
+			continue
+		}
+		// Rebuild from the original bundle so older appended CAs don't pile up.
 		bak := p + ".signalcompanion.bak"
 		base, err := os.ReadFile(bak)
 		if err != nil {
@@ -485,20 +583,13 @@ func patchCACert(ca []byte) (trusted []string, changed bool) {
 			}
 			_ = os.WriteFile(bak, base, 0o644)
 		}
-		if bytes.Contains(base, ca) {
-			trusted = append(trusted, p)
+		if err := os.WriteFile(p, append(append([]byte{}, base...), block...), 0o644); err != nil {
+			logf("cs2: could not patch %s: %v", p, err)
 			continue
 		}
-		desired := append(append([]byte{}, base...), block...)
-		current, _ := os.ReadFile(p)
-		if !bytes.Equal(current, desired) {
-			if err := os.WriteFile(p, desired, 0o644); err != nil {
-				logf("cs2: could not patch %s: %v", p, err)
-				continue
-			}
-			changed = true
-		}
+		logf("cs2: added local CA to %s", p)
 		trusted = append(trusted, p)
+		changed = true
 	}
 	return trusted, changed
 }

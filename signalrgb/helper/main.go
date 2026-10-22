@@ -181,7 +181,7 @@ func main() {
 	dataDir := fs.String("data", "", "folder for log, certificates and state")
 	_ = fs.Parse(os.Args[2:])
 	if *dataDir == "" {
-		*dataDir = filepath.Join(os.Getenv("LOCALAPPDATA"), "SignalRGBHelper")
+		*dataDir = filepath.Join(knownFolder(windows.FOLDERID_LocalAppData, "LOCALAPPDATA"), "SignalRGBHelper")
 	}
 
 	switch mode {

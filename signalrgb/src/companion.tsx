@@ -285,7 +285,9 @@ export default function Companion() {
                 ? "Restart SignalRGB once so it trusts the HTTPS bridge"
                 : c.caTrusted?.length
                   ? "SignalRGB trusts the HTTPS bridge"
-                  : "Apply “CS2 Reactive (SignalCompanion)” to a layer in SignalRGB"
+                  : c.httpsRunning
+                    ? "⚠️ SignalRGB doesn't trust the HTTPS bridge, the effect gets no data (see Show Log)"
+                    : "Apply “CS2 Reactive (SignalCompanion)” to a layer in SignalRGB"
             }
             actions={
               <ActionPanel>

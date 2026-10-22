@@ -14,6 +14,7 @@
   <meta property="flashFx" label="Flashbang white-out" type="boolean" default="1" />
   <meta property="smokeFx" label="Smoke and molotov tints" type="boolean" default="1" />
   <meta property="bombFx" label="Bomb tick and explosion" type="boolean" default="1" />
+  <meta property="bombSpeed" label="Bomb tick speed" type="combobox" values="Calm,Real C4,Steady" default="Calm" />
   <meta property="winFx" label="Round win / loss flash" type="boolean" default="1" />
   <meta property="deathFx" label="Death fade to black" type="boolean" default="1" />
 </head>
@@ -176,16 +177,21 @@
       else if (bombAt >= 0) rem = 40 - (now - bombAt) / 1000;
       else rem = 40;
       rem = clamp(rem, 0, 40);
-      // Beep interval mirrors CS2: ~1 s and nearly steady until 10 s left, then
-      // eases down to ~0.2 s at detonation (the "10-second warning" ramp).
-      var period = rem > 10 ? (1.0 - (40 - rem) * 0.004)
-                            : (0.20 + 0.68 * (rem / 10));
+      // Pulse interval. LEDs run at ~25-30 fps, so every pulse must last several
+      // frames: "Calm" keeps 1 s until 10 s left and speeds up to 0.4 s at most,
+      // "Real C4" mirrors the in-game beep (down to 0.2 s), "Steady" stays at 1 s.
+      var speed = String(prop("bombSpeed", "Calm"));
+      var period;
+      if (speed === "Steady") period = 1.0;
+      else if (speed === "Real C4") period = rem > 10 ? (1.0 - (40 - rem) * 0.004) : (0.20 + 0.68 * (rem / 10));
+      else period = rem > 10 ? 1.0 : (0.40 + 0.60 * (rem / 10));
       bombPhase += (dt / 1000) / period;
       var frac = bombPhase - Math.floor(bombPhase);
-      var on = frac < clamp(0.11 / period, 0.12, 0.6);   // a short blip, not a long flash
+      // Smooth pulse over the whole canvas: snaps on, then fades out over ~55% of the period.
+      var env = frac < 0.55 ? Math.pow(1 - frac / 0.55, 1.6) : 0;
       var danger = 1 - clamp(rem / 40, 0, 1);            // intensity escalates toward 0 s
-      edgePulse("255,0,0", on ? (0.5 + 0.45 * danger) : 0.12);
-      if (on) overlay("rgba(255,0,0," + (0.06 + 0.10 * danger).toFixed(2) + ")");
+      edgePulse("255,0,0", 0.18 + (0.62 + 0.2 * danger) * env);
+      overlay("rgba(255,0,0," + ((0.25 + 0.35 * danger) * env).toFixed(3) + ")");
     }
 
     // ── kill / defuse / explosion / win / loss (bold, unmissable) ──

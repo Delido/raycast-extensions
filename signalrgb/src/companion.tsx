@@ -13,6 +13,7 @@ import {
 import { showFailureToast, usePromise } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { primaryShortcut } from "./api";
+import { isTeamSpeakReady, TeamSpeakSetup } from "./teamspeak-setup";
 import {
   cs2CfgInstalled,
   effectInstalled,
@@ -20,6 +21,7 @@ import {
   getServiceStatus,
   installCs2Cfg,
   installEffect,
+  pressTeamSpeakKey,
   readBatteryNow,
   restartService,
   ServiceStatus,
@@ -130,6 +132,7 @@ export default function Companion() {
   const h = status?.headset;
   const k = status?.keyboard;
   const c = status?.cs2;
+  const ts = status?.teamspeak;
   const st = c?.state;
 
   let cs2Title = "CS2 not running";
@@ -227,6 +230,61 @@ export default function Companion() {
               ...(k.reportedAt ? [{ text: `reported ${since(k.reportedAt)}` }] : []),
             ]}
             actions={<ActionPanel>{serviceActions}</ActionPanel>}
+          />
+        </List.Section>
+      ) : null}
+      {ts && ts.enabled ? (
+        <List.Section title="TeamSpeak">
+          <List.Item
+            icon={
+              ts.state !== "connected"
+                ? { source: Icon.Plug, tintColor: ts.state === "approval" ? Color.Orange : Color.SecondaryText }
+                : ts.inputMuted
+                  ? { source: Icon.MicrophoneDisabled, tintColor: Color.Red }
+                  : { source: Icon.Microphone, tintColor: Color.Green }
+            }
+            title={
+              ts.state === "offline"
+                ? "TeamSpeak not running"
+                : ts.state === "approval"
+                  ? "Waiting for approval in TeamSpeak"
+                  : ts.servers === 0
+                    ? "TeamSpeak connected, no server"
+                    : ts.inputMuted
+                      ? "TeamSpeak microphone muted"
+                      : "TeamSpeak microphone live"
+            }
+            subtitle={
+              !isTeamSpeakReady(ts)
+                ? ts.state === "offline"
+                  ? "Press Enter to set up"
+                  : ts.state === "approval"
+                    ? "Allow the companion in TeamSpeak · Enter for help"
+                    : ts.servers === 0
+                      ? "Join a server to finish the setup · Enter for help"
+                      : ts.keyBound === false
+                        ? "⚠️ Mute key not working · Enter to fix"
+                        : "One step left: bind the mute key · Enter"
+                : `Follows the headset mute${ts.nickname ? ` · ${ts.nickname}` : ""}`
+            }
+            accessories={isTeamSpeakReady(ts) ? [{ tag: { value: "set up", color: Color.Green } }] : []}
+            actions={
+              <ActionPanel>
+                {isTeamSpeakReady(ts) ? (
+                  <>
+                    <Action
+                      title="Toggle TeamSpeak Mute"
+                      icon={Icon.MicrophoneDisabled}
+                      onAction={() => run("Pressing mute key", () => pressTeamSpeakKey(0), refresh)}
+                    />
+                    <Action.Push title="TeamSpeak Setup" icon={Icon.Gear} target={<TeamSpeakSetup />} />
+                  </>
+                ) : (
+                  <Action.Push title="Configure TeamSpeak Mute" icon={Icon.Gear} target={<TeamSpeakSetup />} />
+                )}
+                {serviceActions}
+              </ActionPanel>
+            }
           />
         </List.Section>
       ) : null}

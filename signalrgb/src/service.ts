@@ -67,6 +67,19 @@ export interface CS2Status {
   state: CS2State;
 }
 
+export interface TeamSpeakStatus {
+  enabled: boolean;
+  /** offline = TeamSpeak not running, approval = waiting for "Allow" in TeamSpeak, connected */
+  state: "offline" | "approval" | "connected";
+  servers: number;
+  inputMuted: boolean | null;
+  nickname?: string;
+  lastError?: string;
+  /** null = unknown, false = a key press didn't change TeamSpeak's mute */
+  keyBound: boolean | null;
+  lastPressAt?: string;
+}
+
 export interface ServiceStatus {
   version: string;
   pid: number;
@@ -74,6 +87,7 @@ export interface ServiceStatus {
   headset: HeadsetStatus;
   keyboard: KeyboardStatus;
   cs2: CS2Status;
+  teamspeak?: TeamSpeakStatus;
 }
 
 const helperExe = () => join(environment.assetsPath, "signal-helper.exe");
@@ -115,6 +129,7 @@ export async function writeServiceConfig(prefs: Preferences.CompanionService) {
     gameMode: { enabled: prefs.gameMode },
     cs2: { enabled: prefs.cs2, port: 3000, httpsPort: 3443, token: "signalcompanion" },
     audio: { rotation: [] as string[] },
+    teamspeak: { enabled: prefs.teamspeak, followTeamSpeak: prefs.teamspeakFollow },
   };
   const text = JSON.stringify(config, null, 2);
   await mkdir(environment.supportPath, { recursive: true });
@@ -168,6 +183,16 @@ export async function setMicMute(muted: boolean | "toggle") {
 
 export async function readBatteryNow() {
   return (await call<{ battery: number }>("/api/battery", { method: "POST" }, 5000)).battery;
+}
+
+/** Sends TeamSpeak's remote mute key after `delay` seconds (to record it in TeamSpeak's key bindings). */
+export async function pressTeamSpeakKey(delay = 0) {
+  await call(`/api/teamspeak/press?delay=${delay}`, { method: "POST" });
+}
+
+/** Presses the key once; the result shows up as teamspeak.keyBound in the status. */
+export async function testTeamSpeakKey() {
+  await call("/api/teamspeak/test", { method: "POST" });
 }
 
 export async function testSound() {

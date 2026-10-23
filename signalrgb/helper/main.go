@@ -72,6 +72,10 @@ type Config struct {
 	Audio struct {
 		Rotation []string `json:"rotation"`
 	} `json:"audio"`
+	TeamSpeak struct {
+		Enabled         bool `json:"enabled"`
+		FollowTeamSpeak bool `json:"followTeamSpeak"`
+	} `json:"teamspeak"`
 }
 
 func defaultConfig() Config {
@@ -81,6 +85,7 @@ func defaultConfig() Config {
 	c.Battery.ConfirmSamples, c.Battery.PollSeconds = 2, 60
 	c.GameMode.Enabled = true
 	c.CS2.Enabled, c.CS2.Port, c.CS2.HTTPSPort, c.CS2.Token = true, 3000, 3443, "signalcompanion"
+	c.TeamSpeak.Enabled, c.TeamSpeak.FollowTeamSpeak = true, true
 	return c
 }
 
@@ -93,10 +98,11 @@ type App struct {
 	cfg     Config
 	cfgTime time.Time
 
-	audio    *Audio
-	headset  *Headset
-	keyboard *Keyboard
-	cs2      *CS2
+	audio     *Audio
+	headset   *Headset
+	keyboard  *Keyboard
+	cs2       *CS2
+	teamspeak *TeamSpeak
 }
 
 func (a *App) Config() Config {
@@ -209,10 +215,12 @@ func main() {
 	app.headset = newHeadset(app)
 	app.keyboard = newKeyboard(app)
 	app.cs2 = newCS2(app)
+	app.teamspeak = newTeamSpeak(app)
 
 	app.headset.Start()
 	app.keyboard.Start()
 	app.cs2.Apply()
+	app.teamspeak.Start()
 
 	go func() {
 		for range time.Tick(3 * time.Second) {

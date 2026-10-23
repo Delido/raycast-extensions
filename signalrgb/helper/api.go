@@ -146,15 +146,16 @@ func serveAPI(app *App, ln net.Listener) error {
 	// ── Raycast control API ──
 	mux.HandleFunc("/api/status", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{
-			"ok":       true,
-			"version":  version,
-			"pid":      os.Getpid(),
-			"started":  app.started,
-			"config":   app.configPath,
-			"dataDir":  app.dataDir,
-			"headset":  app.headset.Status(),
-			"keyboard": app.keyboard.Status(),
-			"cs2":      app.cs2.Status(),
+			"ok":        true,
+			"version":   version,
+			"pid":       os.Getpid(),
+			"started":   app.started,
+			"config":    app.configPath,
+			"dataDir":   app.dataDir,
+			"headset":   app.headset.Status(),
+			"keyboard":  app.keyboard.Status(),
+			"cs2":       app.cs2.Status(),
+			"teamspeak": app.teamspeak.Status(),
 		})
 	})
 	mux.HandleFunc("/api/mic", func(w http.ResponseWriter, r *http.Request) {
@@ -199,6 +200,37 @@ func serveAPI(app *App, ln net.Listener) error {
 			return
 		}
 		writeJSON(w, 200, map[string]any{"ok": true, "battery": level})
+	})
+	// Sends the TeamSpeak remote key after a delay, so it can be recorded in TeamSpeak's key bindings.
+	mux.HandleFunc("/api/teamspeak/press", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			fail(w, 405, "POST required")
+			return
+		}
+		delay, _ := strconv.Atoi(r.URL.Query().Get("delay"))
+		if st := app.teamspeak.Status(); st.State != "connected" {
+			fail(w, 409, "TeamSpeak is not connected ("+st.State+")")
+			return
+		}
+		go func() {
+			time.Sleep(time.Duration(min(max(delay, 0), 30)) * time.Second)
+			if err := app.teamspeak.Press(); err != nil {
+				logf("teamspeak: %v", err)
+			}
+		}()
+		writeJSON(w, 200, map[string]any{"ok": true, "delay": delay})
+	})
+	// Presses the key once and checks whether TeamSpeak toggled (result in status.teamspeak.keyBound).
+	mux.HandleFunc("/api/teamspeak/test", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			fail(w, 405, "POST required")
+			return
+		}
+		if err := app.teamspeak.Test(); err != nil {
+			fail(w, 409, err.Error())
+			return
+		}
+		writeJSON(w, 200, map[string]any{"ok": true})
 	})
 	mux.HandleFunc("/api/test-sound", func(w http.ResponseWriter, r *http.Request) {
 		playSound(app.Config().Battery.SoundPath)

@@ -136,6 +136,7 @@ func (h *Headset) onHardwareMute(muted bool) {
 		return
 	}
 	cfg := h.app.Config()
+	go h.app.teamspeak.SetMuted(muted)
 	if !cfg.Mic.Enabled || !cfg.Mic.HardwareToWindows {
 		logf("headset: button -> %s (not mirrored)", muteWord(muted))
 		return
@@ -170,6 +171,7 @@ func (h *Headset) windowsLoop() {
 		hw := h.st.HardwareMuted
 		h.mu.Unlock()
 		if last != nil && *last != info.Muted {
+			go h.app.teamspeak.SetMuted(info.Muted)
 			cfg := h.app.Config()
 			// Skip the echo of a change that came from the headset button itself.
 			if cfg.Mic.Enabled && cfg.Mic.WindowsToHardware && (hw == nil || *hw != info.Muted) {

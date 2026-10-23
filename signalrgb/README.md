@@ -44,10 +44,19 @@ Einige Funktionen müssen dauerhaft laufen, das kann eine Raycast-Extension alle
 | Funktion | |
 |---|---|
 | **Mic Mute** | Mute-Taste am Headset → Windows-Mikrofon stumm (Discord, Teams usw. bekommen kein Signal). Umgekehrt schaltet ein Mute in Windows auch das Headset stumm. |
+| **TeamSpeak** | Der Headset-Mute schaltet auch TeamSpeak 5/6 stumm, und ein Mute in TeamSpeak schaltet Headset und Windows mit. Einrichtung einmalig mit dem Assistenten in **Headset & Companion → TeamSpeak** (siehe unten). |
 | **Battery Alert** | Akku wird jede Minute gelesen. Unter der Schwelle (Standard 20 %) und nach zwei Bestätigungsmessungen spielt ein Ton, optional mit Windows-Benachrichtigung. Wiederholung alle 30 min, bis geladen wird. |
 | **Keyboard Game Mode** | Hardware-Game-Mode der Tastatur, solange ein Spiel läuft. Welche Programme Spiele sind, erkennt die **Power Plan**-Extension (deren Hintergrundbefehl muss an sein). Kommt 60 s keine Meldung, schaltet der Game Mode ab. |
 | **CS2 Integration** | Empfänger für CS2 Game State Integration (`:3000`) und HTTPS-Brücke für den Effekt „CS2 Reactive“ (`:3443`). Beide laufen **nur, solange `cs2.exe` läuft** (plus 30 s). GSI-Config und Effekt lassen sich in **Headset & Companion** installieren. |
 | **Audio-Router** | Dieselbe API wie SignalCompanion unter `http://127.0.0.1:3010`: `/next`, `/prev`, `/set?name=…`, `/current`, `/devices`. Makros in SignalRGB funktionieren weiter. |
+
+### TeamSpeak einrichten
+
+TeamSpeak lässt sich von anderen Programmen nicht direkt stummschalten. Der Dienst nutzt deshalb die Schnittstelle *Remote Apps* von TeamSpeak (`ws://127.0.0.1:5899`) und drückt dort eine virtuelle Taste, die du einmal der Aktion „Mikrofon stummschalten umschalten“ zuweist. Er liest den Mute-Zustand von TeamSpeak mit und drückt nur, wenn TeamSpeak nicht schon im gewünschten Zustand ist, so kann nichts aus dem Takt geraten.
+
+In **Headset & Companion** öffnet Enter auf dem Eintrag **TeamSpeak** einen Assistenten mit fünf Schritten und Live-Häkchen: TeamSpeak läuft → Companion in TeamSpeak erlauben → mit einem Server verbinden → Taste belegen („Send Key in 5 Seconds“, dann in TeamSpeak aufnehmen) → testen. Die Freigabe und die bestätigte Tastenbelegung merkt sich der Dienst.
+
+Hinweis: Die mitgelieferte TeamSpeak-Doku nennt den Nachrichtentyp `keyPress`, der Client versteht aber nur `buttonPress`.
 
 Unterstützte Geräte (wie in SignalCompanion): Corsair Virtuoso XT Wireless (`1b1c:0a64`) und Corsair Vanguard Pro 96 (`1b1c:2b0e`).
 

@@ -108,6 +108,23 @@
           "description": "Mutes at device level, which apps with raw capture can't bypass"
         },
         {
+          "name": "teamspeak",
+          "title": "TeamSpeak",
+          "label": "Headset mute also mutes TeamSpeak",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Needs TeamSpeak 5/6 with Remote Apps; allow the app once in TeamSpeak and bind its key to “Toggle Microphone Mute” (see Headset & Companion)"
+        },
+        {
+          "name": "teamspeakFollow",
+          "label": "TeamSpeak mute also mutes headset and Windows",
+          "type": "checkbox",
+          "required": false,
+          "default": true,
+          "description": "Muting in TeamSpeak itself mutes the Windows microphone and the headset too"
+        },
+        {
           "name": "batteryAlert",
           "title": "Battery",
           "label": "Play a sound when the battery is low",

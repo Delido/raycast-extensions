@@ -8,3 +8,4 @@ Thumbs.db
 
 # Go helpers are built locally (npm run dev) or downloaded from the GitHub releases
 */assets/*.exe
+*/assets/*.exe~

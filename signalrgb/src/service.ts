@@ -77,6 +77,8 @@ export interface TeamSpeakStatus {
   lastError?: string;
   /** null = unknown, false = a key press didn't change TeamSpeak's mute */
   keyBound: boolean | null;
+  /** why keyBound is false: the press did nothing, or TeamSpeak switched back on key release */
+  keyProblem?: "no-effect" | "switches-back";
   lastPressAt?: string;
 }
 

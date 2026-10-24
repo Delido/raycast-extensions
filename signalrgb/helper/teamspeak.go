@@ -33,7 +33,8 @@ type TeamSpeakStatus struct {
 	InputMuted  *bool      `json:"inputMuted"`
 	Nickname    string     `json:"nickname,omitempty"`
 	LastError   string     `json:"lastError,omitempty"`
-	KeyBound    *bool      `json:"keyBound"` // nil = unknown, false = a press didn't change anything
+	KeyBound    *bool      `json:"keyBound"`             // nil = unknown, false = the key doesn't toggle mute properly
+	KeyProblem  string     `json:"keyProblem,omitempty"` // "no-effect" or "switches-back"
 	LastPressAt *time.Time `json:"lastPressAt,omitempty"`
 }
 
@@ -291,13 +292,25 @@ func (t *TeamSpeak) onSelfProperty(raw json.RawMessage) {
 	}
 	c.muted = boolPtr(muted)
 	fromUs := t.pending != nil && *t.pending == muted
-	if fromUs {
+	// A change right after our own press that we didn't ask for is an echo: TeamSpeak toggled
+	// again on key release (hold action such as push-to-mute) or the key is bound twice.
+	echo := !fromUs && t.st.LastPressAt != nil && time.Since(*t.st.LastPressAt) < 1500*time.Millisecond
+	switch {
+	case fromUs:
 		t.pending = nil
-		t.st.KeyBound = boolPtr(true)
+		t.st.KeyBound, t.st.KeyProblem = boolPtr(true), ""
 		go t.saveKeyBound(true)
+	case echo:
+		t.pending = nil
+		t.st.KeyBound, t.st.KeyProblem = boolPtr(false), "switches-back"
+		go t.saveKeyBound(false)
 	}
 	t.mu.Unlock()
 	logf("teamspeak: microphone %s", muteWord(muted))
+	if echo {
+		logf("teamspeak: switched back right after our key press: bind the key only once and only to 'Toggle Microphone Mute' (not a hold action); ignoring it")
+		return // never let it undo the headset/Windows mute
+	}
 
 	// Muted in TeamSpeak itself: follow with Windows and the headset.
 	cfg := t.app.Config()
@@ -317,6 +330,9 @@ func (t *TeamSpeak) SetMuted(muted bool) {
 	if st.State != "connected" || st.InputMuted == nil || *st.InputMuted == muted {
 		return
 	}
+	if st.KeyBound != nil && !*st.KeyBound {
+		return // misbound key: pressing it would only flip TeamSpeak back and forth; fix via the setup's Test
+	}
 	// The headset button and the Windows mute both trigger this; pressExpecting refuses a
 	// second press while TeamSpeak hasn't confirmed the first one.
 	if err := t.pressExpecting(muted); err != nil && !errors.Is(err, errPressPending) {
@@ -331,7 +347,7 @@ func (t *TeamSpeak) Test() error {
 		return errors.New("TeamSpeak is not connected to a server")
 	}
 	t.mu.Lock()
-	t.st.KeyBound = nil
+	t.st.KeyBound, t.st.KeyProblem = nil, ""
 	t.mu.Unlock()
 	return t.pressExpecting(!*st.InputMuted)
 }
@@ -360,7 +376,7 @@ func (t *TeamSpeak) pressExpecting(target bool) error {
 		defer t.mu.Unlock()
 		if t.pending != nil && *t.pending == target {
 			t.pending = nil
-			t.st.KeyBound = boolPtr(false)
+			t.st.KeyBound, t.st.KeyProblem = boolPtr(false), "no-effect"
 			go t.saveKeyBound(false)
 			logf("teamspeak: key press had no effect, bind it to 'Toggle Microphone Mute' in TeamSpeak")
 		}

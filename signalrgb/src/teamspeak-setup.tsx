@@ -66,7 +66,12 @@ Join any TeamSpeak server. The companion needs a connection to read your microph
       id: "bind",
       title: "Bind the mute key in TeamSpeak",
       state: bound ? "done" : ts?.keyBound === false ? "failed" : onServer ? "todo" : "todo",
-      subtitle: ts?.keyBound === false ? "Last key press didn't mute TeamSpeak" : undefined,
+      subtitle:
+        ts?.keyProblem === "switches-back"
+          ? "TeamSpeak switches back on key release: wrong action or bound twice"
+          : ts?.keyBound === false
+            ? "Last key press didn't mute TeamSpeak"
+            : undefined,
       markdown: `## 4. Bind the mute key
 
 TeamSpeak can't be muted directly by other apps. Instead, the companion presses a *virtual key* that you assign to TeamSpeak's mute action once:
@@ -75,7 +80,9 @@ TeamSpeak can't be muted directly by other apps. Instead, the companion presses 
 2. Here in Raycast run **Send Key in 5 Seconds** (Enter). Raycast closes.
 3. Within those 5 seconds click **record** in TeamSpeak and keep the TeamSpeak window in front.
 
-TeamSpeak then shows the key as *signalrgb.mic.toggle*. Save the binding, then run step 5.`,
+TeamSpeak then shows the key as *signalrgb.mic.toggle*. Save the binding, then run step 5.
+
+**Mute switches straight back off?** Then the key is bound to an action that unmutes on release (e.g. *Push-to-Mute*, "while held") or it is bound twice. In **Key Bindings**, delete every binding that uses *signalrgb.mic.toggle* and bind it **once**, only to **Toggle Microphone Mute**. Until the test in step 5 passes, the companion doesn't press the key, so your headset mute always stays as you set it.`,
     },
     {
       id: "test",

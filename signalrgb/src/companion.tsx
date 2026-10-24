@@ -262,9 +262,11 @@ export default function Companion() {
                     ? "Allow the companion in TeamSpeak · Enter for help"
                     : ts.servers === 0
                       ? "Join a server to finish the setup · Enter for help"
-                      : ts.keyBound === false
-                        ? "⚠️ Mute key not working · Enter to fix"
-                        : "One step left: bind the mute key · Enter"
+                      : ts.keyProblem === "switches-back"
+                        ? "⚠️ TeamSpeak unmutes again on key release · Enter to fix"
+                        : ts.keyBound === false
+                          ? "⚠️ Mute key not working · Enter to fix"
+                          : "One step left: bind the mute key · Enter"
                 : `Follows the headset mute${ts.nickname ? ` · ${ts.nickname}` : ""}`
             }
             accessories={isTeamSpeakReady(ts) ? [{ tag: { value: "set up", color: Color.Green } }] : []}

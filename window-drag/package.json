@@ -1,0 +1,176 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "window-drag",
+  "title": "Window Drag",
+  "description": "Move and resize windows with Alt + mouse drag anywhere in the window, like AltSnap",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Productivity",
+    "System"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "window-drag-service",
+      "title": "Window Drag Service",
+      "subtitle": "Window Drag",
+      "description": "Keeps Window Drag running in the background. Enable its background refresh once; all settings are here.",
+      "mode": "no-view",
+      "interval": "1m",
+      "preferences": [
+        {
+          "name": "modifier",
+          "title": "Modifier Key",
+          "description": "Hold this key while dragging",
+          "type": "dropdown",
+          "required": false,
+          "default": "alt",
+          "data": [
+            {
+              "title": "Alt",
+              "value": "alt"
+            },
+            {
+              "title": "Win",
+              "value": "win"
+            },
+            {
+              "title": "Ctrl",
+              "value": "ctrl"
+            },
+            {
+              "title": "Shift",
+              "value": "shift"
+            }
+          ]
+        },
+        {
+          "name": "moveButton",
+          "title": "Move With",
+          "description": "Mouse button that moves the window",
+          "type": "dropdown",
+          "required": false,
+          "default": "right",
+          "data": [
+            {
+              "title": "Right mouse button",
+              "value": "right"
+            },
+            {
+              "title": "Left mouse button",
+              "value": "left"
+            },
+            {
+              "title": "Middle mouse button",
+              "value": "middle"
+            }
+          ]
+        },
+        {
+          "name": "resizeButton",
+          "title": "Resize With",
+          "description": "Mouse button that resizes the window from the nearest edge or corner",
+          "type": "dropdown",
+          "required": false,
+          "default": "middle",
+          "data": [
+            {
+              "title": "Middle mouse button",
+              "value": "middle"
+            },
+            {
+              "title": "Left mouse button",
+              "value": "left"
+            },
+            {
+              "title": "Right mouse button",
+              "value": "right"
+            },
+            {
+              "title": "Off",
+              "value": "none"
+            }
+          ]
+        },
+        {
+          "name": "snap",
+          "title": "Snap to Screen Edges",
+          "description": "Distance at which windows snap to the edges of the screen",
+          "type": "dropdown",
+          "required": false,
+          "default": "15",
+          "data": [
+            {
+              "title": "15 px",
+              "value": "15"
+            },
+            {
+              "title": "30 px",
+              "value": "30"
+            },
+            {
+              "title": "Off",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "name": "raise",
+          "title": "Behaviour",
+          "label": "Bring the window to the front",
+          "description": "Activate the window you start dragging",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "skipFullscreen",
+          "label": "Ignore fullscreen windows (games, videos)",
+          "description": "Alt + click keeps working normally in fullscreen games",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "exclude",
+          "title": "Excluded Programs",
+          "description": "Exe names separated by commas, e.g. cs2.exe, photoshop.exe",
+          "type": "textfield",
+          "required": false,
+          "default": ""
+        }
+      ]
+    },
+    {
+      "name": "toggle-window-drag",
+      "title": "Toggle Window Drag",
+      "description": "Pause or resume Window Drag",
+      "mode": "no-view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "build:helper": "node ../scripts/build-go-helper.mjs helper assets/drag-helper.exe --gui",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

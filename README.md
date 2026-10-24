@@ -23,6 +23,7 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 | <img src="signalrgb/assets/icon.png" width="28" alt="signalrgb"> | **[SignalRGB](signalrgb/)** | PC-Sensoren live, Beleuchtung, Headset-Mute und -Akku, Tastatur-Game-Mode, CS2-Integration, Audioausgabe | Windows |
 | <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
 | <img src="amp/assets/extension-icon.png" width="28" alt="amp"> | **[AMP](amp/)** | CubeCoders-AMP-Game-Server steuern: Start/Stop, Konsole, Spieler, Backups, neue Server | Windows, macOS |
+| <img src="window-drag/assets/icon.png" width="28" alt="window-drag"> | **[Window Drag](window-drag/)** | Fenster mit Alt + Maus ziehen verschieben und in der Größe ändern, wie AltSnap | Windows |
 | <img src="power-plan/assets/icon.png" width="28" alt="power-plan"> | **[Power Plan](power-plan/)** | Energiesparplan wechseln, automatisch Höchstleistung beim Spielen | Windows |
 
 Was jede Extension genau kann und wie sie eingerichtet wird, steht in ihrer eigenen README.
@@ -42,9 +43,9 @@ npm run dev
 
 Beim ersten Öffnen eines Befehls fragt Raycast nach den Einstellungen (Server-URL, Token usw.). Ändern kannst du sie später unter **Settings → Extensions → \<Extension\>**.
 
-### Windows-Helfer (SignalRGB, MTR, Power Plan)
+### Windows-Helfer (SignalRGB, MTR, Power Plan, Window Drag)
 
-Diese drei Extensions bringen einen kleinen Helfer in Go mit, weil Node.js an die nötigen Windows-Schnittstellen nicht herankommt (ICMP mit TTL, Energiesparpläne, HID-Geräte, Core Audio). Keiner davon braucht Administratorrechte.
+Diese Extensions bringen einen kleinen Helfer in Go mit, weil Node.js an die nötigen Windows-Schnittstellen nicht herankommt (ICMP mit TTL, Energiesparpläne, HID-Geräte, Core Audio, globaler Maus-Hook). Keiner davon braucht Administratorrechte.
 
 - **Mit Go 1.26+** (`winget install GoLang.Go`) baut `npm run dev` den Helfer automatisch.
 - **Ohne Go**: die passende `.exe` aus den [Releases](https://github.com/Delido/raycast-extensions/releases) in den Ordner `assets/` der Extension legen, dann `npm run dev`.

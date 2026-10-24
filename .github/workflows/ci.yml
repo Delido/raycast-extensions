@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        extension: [amp, bookstack, checkmk, keep-awake, laps-connect, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, snipeit, ssh, teams]
+        extension: [amp, bookstack, checkmk, keep-awake, laps-connect, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, snipeit, ssh, teams, window-drag]
     defaults:
       run:
         working-directory: ${{ matrix.extension }}
@@ -47,7 +47,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: [mtr/probe, power-plan/helper, signalrgb/helper]
+        dir: [mtr/probe, power-plan/helper, signalrgb/helper, window-drag/helper]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v7

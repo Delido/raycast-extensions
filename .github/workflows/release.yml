@@ -23,6 +23,7 @@ jobs:
           (cd mtr && node ../scripts/build-go-helper.mjs probe assets/mtr-probe.exe)
           (cd power-plan && node ../scripts/build-go-helper.mjs helper assets/power-helper.exe)
           (cd signalrgb && node ../scripts/build-go-helper.mjs helper assets/signal-helper.exe --gui)
+          (cd window-drag && node ../scripts/build-go-helper.mjs helper assets/drag-helper.exe --gui)
       - name: Create release
         shell: bash
         env:
@@ -31,4 +32,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" --generate-notes \
             mtr/assets/mtr-probe.exe \
             power-plan/assets/power-helper.exe \
-            signalrgb/assets/signal-helper.exe
+            signalrgb/assets/signal-helper.exe \
+            window-drag/assets/drag-helper.exe

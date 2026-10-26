@@ -31,6 +31,23 @@
       "type": "checkbox",
       "required": false,
       "default": false
+    },
+    {
+      "name": "inlineVideo",
+      "title": "Video",
+      "label": "Show the video in Raycast",
+      "description": "Converts the lineup video into an animated GIF with ffmpeg (about 5 s per lineup, cached afterwards). Raycast cannot play videos itself.",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "ffmpegPath",
+      "title": "ffmpeg Path",
+      "description": "Only needed if ffmpeg is installed somewhere unusual. Leave empty to find it automatically.",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "C:\\Tools\\ffmpeg\\bin\\ffmpeg.exe"
     }
   ],
   "dependencies": {

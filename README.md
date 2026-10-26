@@ -25,6 +25,7 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 | <img src="amp/assets/extension-icon.png" width="28" alt="amp"> | **[AMP](amp/)** | CubeCoders-AMP-Game-Server steuern: Start/Stop, Konsole, Spieler, Backups, neue Server | Windows, macOS |
 | <img src="window-drag/assets/icon.png" width="28" alt="window-drag"> | **[Window Drag](window-drag/)** | Fenster mit Alt + Maus ziehen verschieben und in der Größe ändern, wie AltSnap | Windows |
 | <img src="power-plan/assets/icon.png" width="28" alt="power-plan"> | **[Power Plan](power-plan/)** | Energiesparplan wechseln, automatisch Höchstleistung beim Spielen | Windows |
+| <img src="g4f/assets/gpt-icon.png" width="28" alt="g4f"> | **[GPT4Free](g4f/)** | KI-Chat und Textbefehle mit eigenen OpenAI-kompatiblen APIs (z. B. Open WebUI). Angepasste Kopie von [raycast-g4f](https://github.com/XInTheDark/raycast-g4f), GPL-3.0 | Windows, macOS |
 
 Was jede Extension genau kann und wie sie eingerichtet wird, steht in ihrer eigenen README.
 
@@ -92,4 +93,4 @@ Weitere Dokumentation in [docs/](docs/):
 
 ## Lizenz
 
-[MIT](LICENSE)
+[MIT](LICENSE), mit einer Ausnahme: [g4f/](g4f/) ist eine angepasste Kopie von [raycast-g4f](https://github.com/XInTheDark/raycast-g4f) und steht wie das Original unter der [GPL-3.0](g4f/LICENSE.txt).

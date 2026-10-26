@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        extension: [amp, bookstack, checkmk, keep-awake, laps-connect, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, snipeit, ssh, teams, window-drag]
+        extension: [amp, bookstack, checkmk, g4f, keep-awake, laps-connect, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, snipeit, ssh, teams, window-drag]
     defaults:
       run:
         working-directory: ${{ matrix.extension }}
@@ -35,7 +35,9 @@ jobs:
       - name: Build (incl. Go helper)
         run: npm run build
       - name: Typecheck
-        run: npx tsc --noEmit -p .
+        shell: bash
+        # JavaScript-only extensions (g4f) have no tsconfig.json
+        run: if [ -f tsconfig.json ]; then npx tsc --noEmit -p .; else echo "no tsconfig.json, skipped"; fi
       - name: ESLint
         run: npx eslint src
       - name: Prettier

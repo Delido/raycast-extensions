@@ -24,6 +24,7 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 | <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
 | <img src="amp/assets/extension-icon.png" width="28" alt="amp"> | **[AMP](amp/)** | CubeCoders-AMP-Game-Server steuern: Start/Stop, Konsole, Spieler, Backups, neue Server | Windows, macOS |
 | <img src="window-drag/assets/icon.png" width="28" alt="window-drag"> | **[Window Drag](window-drag/)** | Fenster mit Alt + Maus ziehen verschieben und in der Größe ändern, wie AltSnap | Windows |
+| <img src="cs2-nades/assets/icon.png" width="28" alt="cs2-nades"> | **[CS2 Nades](cs2-nades/)** | Smoke-, Molotov-, Flash- und HE-Lineups der Premier-Maps mit Lineup-Bild und Video, live von [csnades.gg](https://csnades.gg) | Windows, macOS |
 | <img src="power-plan/assets/icon.png" width="28" alt="power-plan"> | **[Power Plan](power-plan/)** | Energiesparplan wechseln, automatisch Höchstleistung beim Spielen | Windows |
 | <img src="g4f/assets/gpt-icon.png" width="28" alt="g4f"> | **[GPT4Free](g4f/)** | KI-Chat und Textbefehle mit eigenen OpenAI-kompatiblen APIs (z. B. Open WebUI). Angepasste Kopie von [raycast-g4f](https://github.com/XInTheDark/raycast-g4f), GPL-3.0 | Windows, macOS |
 

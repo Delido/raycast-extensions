@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        extension: [amp, bookstack, checkmk, g4f, keep-awake, laps-connect, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, snipeit, ssh, teams, window-drag]
+        extension: [amp, bookstack, checkmk, cs2-nades, g4f, keep-awake, laps-connect, mtr, onedev, paperless, power-plan, sharepoint, signalrgb, snipeit, ssh, teams, window-drag]
     defaults:
       run:
         working-directory: ${{ matrix.extension }}

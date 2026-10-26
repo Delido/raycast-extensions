@@ -1,0 +1,54 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "cs2-nades",
+  "title": "CS2 Nades",
+  "description": "Smoke, molotov, flash and HE lineups for the Counter-Strike 2 Premier maps with videos, loaded live from csnades.gg",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Fun",
+    "Media"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows",
+    "macOS"
+  ],
+  "commands": [
+    {
+      "name": "nades",
+      "title": "CS2 Nades",
+      "description": "Browse the lineups of a Premier map, see the lineup picture and play the video",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "onlyRecommended",
+      "title": "Start Filter",
+      "label": "Show only recommended lineups at start",
+      "description": "Recommended lineups are the ones csnades.gg marks as the essentials for a map. Ctrl+Shift+E switches in the list.",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

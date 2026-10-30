@@ -101,8 +101,8 @@
     }
   ],
   "dependencies": {
-    "@raycast/api": "^2.8.1",
-    "@raycast/utils": "^2.3.2"
+    "@raycast/api": "^2.9.0",
+    "@raycast/utils": "^2.3.3"
   },
   "scripts": {
     "build": "ray build",

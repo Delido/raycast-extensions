@@ -4,6 +4,7 @@ import {
   closeMainWindow,
   Color,
   Detail,
+  Form,
   getPreferenceValues,
   Icon,
   Keyboard,
@@ -11,6 +12,7 @@ import {
   showHUD,
   showToast,
   Toast,
+  useNavigation,
 } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
 import { getLapsPassword, LapsCredential, signOut } from "./lib/graph";
@@ -75,6 +77,60 @@ async function sshWithLaps(user: WireGuardUser) {
 async function sshOwnLogin(user: WireGuardUser) {
   await closeMainWindow({ clearRootSearch: true });
   await openInTerminal(user.name, ["ssh", ...jumpArgs(), "-o", `HostKeyAlias=${deviceName(user)}`, user.ip]);
+}
+
+/** SSH with any other account (e.g. a local admin or DOMAIN\user); the password is asked in the terminal. */
+async function sshAsUser(user: WireGuardUser, login: string) {
+  await closeMainWindow({ clearRootSearch: true });
+  await openInTerminal(user.name, [
+    "ssh",
+    ...jumpArgs(),
+    "-o",
+    `HostKeyAlias=${deviceName(user)}`,
+    "-l",
+    safeArg(login),
+    user.ip,
+  ]);
+}
+
+function SshAsUserForm({ user }: { user: WireGuardUser }) {
+  const { pop } = useNavigation();
+  return (
+    <Form
+      navigationTitle={`SSH to ${deviceName(user)}`}
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm
+            title="Connect"
+            icon={Icon.Terminal}
+            onSubmit={async ({ login }: { login: string }) => {
+              const name = login.trim();
+              if (!name) {
+                await showToast({ style: Toast.Style.Failure, title: "Enter a user name" });
+                return;
+              }
+              try {
+                await sshAsUser(user, name);
+                pop();
+              } catch (error) {
+                await showToast({ style: Toast.Style.Failure, title: "SSH failed", message: (error as Error).message });
+              }
+            }}
+          />
+        </ActionPanel>
+      }
+    >
+      <Form.TextField
+        id="login"
+        title="User Name"
+        placeholder="admin, DOMAIN\user or user@domain"
+        info="The password is asked in the terminal"
+        storeValue
+        autoFocus
+      />
+      <Form.Description text={`${user.ip} (${deviceName(user)})`} />
+    </Form>
+  );
 }
 
 /** RDP with the LAPS account; via the jump host a local SSH tunnel is opened first. */
@@ -193,6 +249,12 @@ function ConnectView() {
                   icon={Icon.Person}
                   shortcut={Keyboard.Shortcut.Common.Open}
                   onAction={() => sshOwnLogin(user)}
+                />
+                <Action.Push
+                  title="SSH as Other User…"
+                  icon={Icon.PersonLines}
+                  shortcut={Keyboard.Shortcut.Common.OpenWith}
+                  target={<SshAsUserForm user={user} />}
                 />
                 <Action.Push
                   title="Show LAPS Password"

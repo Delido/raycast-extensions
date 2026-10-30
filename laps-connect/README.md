@@ -20,6 +20,7 @@ Angezeigt werden nur WireGuard-Einträge ohne Zusatz (`S-DOE`, nicht `S-DOE-PRIV
 | **SSH with LAPS** (Enter) | LAPS-Passwort in die Zwischenablage, Windows Terminal öffnet `ssh <laps-konto>@<ip>`. Bei der Passwortabfrage **Rechtsklick** zum Einfügen |
 | **RDP with LAPS** (Ctrl/Cmd+R) | Remotedesktop meldet sich direkt mit dem LAPS-Konto an |
 | **SSH with Own Login** (Ctrl/Cmd+O) | SSH mit deinem eigenen Login, z. B. für Mac/Linux ohne LAPS |
+| **SSH as Other User…** (Ctrl/Cmd+Shift+O) | SSH mit frei wählbarem Benutzernamen (z. B. `admin`, `DOMAIN\user`, `user@domain`). Das Passwort fragt das Terminal ab, der zuletzt genutzte Name wird gemerkt |
 | **Show LAPS Password** (Ctrl/Cmd+Shift+P) | Konto und Passwort anzeigen |
 | Copy IP / Copy Device Name | |
 | Refresh | Ctrl/Cmd+Shift+R |

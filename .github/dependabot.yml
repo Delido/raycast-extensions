@@ -6,6 +6,7 @@ updates:
       - /bookstack
       - /checkmk
       - /cs2-nades
+      - /defender-security
       - /keep-awake
       - /laps-connect
       - /mtr

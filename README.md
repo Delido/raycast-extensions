@@ -8,6 +8,8 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 
 ## Extensions
 
+### Arbeit und IT-Administration
+
 | | Extension | Wofür | Plattform |
 |---|---|---|---|
 | <img src="onedev/assets/icon.png" width="28" alt="onedev"> | **[OneDev](onedev/)** | Projekte, Issues, Pull Requests und Builds durchsuchen | Windows, macOS |
@@ -17,15 +19,26 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 | <img src="teams/assets/icon.png" width="28" alt="teams"> | **[Microsoft Teams](teams/)** | Personen, Chats, Kanäle, Nachrichten, Status, Meetings | Windows, macOS |
 | <img src="snipeit/assets/icon.png" width="28" alt="snipeit"> | **[Snipe-IT](snipeit/)** | Assets, Benutzer, Lizenzen und Zubehör suchen, Assets aus- und einchecken, Inventur und fällige Audits | Windows, macOS |
 | <img src="ssh/assets/icon.png" width="28" alt="ssh"> | **[SSH Sessions](ssh/)** | SSH-Hosts finden und verbinden, zentrale Host-Listen, SOCKS-Tunnel mit Browser, SFTP-Dateibrowser | Windows, macOS |
-| <img src="laps-connect/assets/icon.png" width="28" alt="laps-connect"> | **[LAPS Connect](laps-connect/)** | Für Admins: WireGuard-IP eines Rechners finden, Windows-LAPS-Passwort aus Entra holen, per SSH oder RDP verbinden, mit Passwortsperre | Windows, macOS |
-| <img src="keep-awake/assets/icon.png" width="28" alt="keep-awake"> | **[Keep Awake](keep-awake/)** | Rechner wach halten, optional Teams-Status auf Verfügbar | Windows, macOS |
-| <img src="paperless/assets/icon.png" width="28" alt="paperless"> | **[Paperless-ngx](paperless/)** | Dokumente suchen, bearbeiten, herunterladen und hochladen, mit Passwortsperre | Windows, macOS |
-| <img src="signalrgb/assets/icon.png" width="28" alt="signalrgb"> | **[SignalRGB](signalrgb/)** | PC-Sensoren live, Beleuchtung, Headset-Mute und -Akku, Tastatur-Game-Mode, CS2-Integration, Audioausgabe | Windows |
-| <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
-| <img src="amp/assets/extension-icon.png" width="28" alt="amp"> | **[AMP](amp/)** | CubeCoders-AMP-Game-Server steuern: Start/Stop, Konsole, Spieler, Backups, neue Server | Windows, macOS |
-| <img src="window-drag/assets/icon.png" width="28" alt="window-drag"> | **[Window Drag](window-drag/)** | Fenster mit Alt + Maus ziehen verschieben und in der Größe ändern, wie AltSnap | Windows |
+| <img src="laps-connect/assets/icon.png" width="28" alt="laps-connect"> | **[LAPS Connect](laps-connect/)** | WireGuard-IP eines Rechners finden, Windows-LAPS-Passwort aus Entra holen, per SSH oder RDP verbinden, mit Passwortsperre | Windows, macOS |
+| <img src="defender-security/assets/icon.png" width="28" alt="defender-security"> | **[Defender Schwachstellen](defender-security/)** | Offene Schwachstellen aus Microsoft Defender abrufen, durchsuchen und priorisieren, interaktiver HTML-Report, mit Passwortsperre | Windows |
+
+### Gaming
+
+| | Extension | Wofür | Plattform |
+|---|---|---|---|
+| <img src="signalrgb/assets/icon.png" width="28" alt="signalrgb"> | **[SignalRGB](signalrgb/)** | PC-Sensoren live, Beleuchtung, Headset-Mute und -Akku, Tastatur-Game-Mode, CS2-Integration, TeamSpeak-Mute, Audioausgabe | Windows |
 | <img src="cs2-nades/assets/icon.png" width="28" alt="cs2-nades"> | **[CS2 Nades](cs2-nades/)** | Smoke-, Molotov-, Flash- und HE-Lineups der Premier-Maps, Video direkt in Raycast (per ffmpeg), live von [csnades.gg](https://csnades.gg) | Windows, macOS |
 | <img src="power-plan/assets/icon.png" width="28" alt="power-plan"> | **[Power Plan](power-plan/)** | Energiesparplan wechseln, automatisch Höchstleistung beim Spielen | Windows |
+| <img src="amp/assets/extension-icon.png" width="28" alt="amp"> | **[AMP](amp/)** | CubeCoders-AMP-Game-Server steuern: Start/Stop, Konsole, Spieler, Backups, neue Server | Windows, macOS |
+
+### Windows-Werkzeuge und Alltag
+
+| | Extension | Wofür | Plattform |
+|---|---|---|---|
+| <img src="window-drag/assets/icon.png" width="28" alt="window-drag"> | **[Window Drag](window-drag/)** | Fenster mit Alt + Maus ziehen verschieben und in der Größe ändern, wie AltSnap | Windows |
+| <img src="keep-awake/assets/icon.png" width="28" alt="keep-awake"> | **[Keep Awake](keep-awake/)** | Rechner wach halten, optional Teams-Status auf Verfügbar | Windows, macOS |
+| <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
+| <img src="paperless/assets/icon.png" width="28" alt="paperless"> | **[Paperless-ngx](paperless/)** | Dokumente suchen, bearbeiten, herunterladen und hochladen, mit Passwortsperre | Windows, macOS |
 | <img src="g4f/assets/gpt-icon.png" width="28" alt="g4f"> | **[GPT4Free](g4f/)** | KI-Chat und Textbefehle mit eigenen OpenAI-kompatiblen APIs (z. B. Open WebUI). Angepasste Kopie von [raycast-g4f](https://github.com/XInTheDark/raycast-g4f), GPL-3.0 | Windows, macOS |
 
 Was jede Extension genau kann und wie sie eingerichtet wird, steht in ihrer eigenen README.
@@ -64,7 +77,7 @@ npm run dev     # nach "ready" mit Ctrl+C beenden
 ## Sicherheit
 
 - Zugangsdaten (Tokens, Passwörter) liegen nur in Raycast, als Passwortfelder im verschlüsselten Raycast-Speicher, nie im Code oder im Repo.
-- **Paperless-ngx** und **LAPS Connect** speichern ihre Zugangsdaten zusätzlich mit einem eigenen Passwort verschlüsselt und sperren sich nach einer einstellbaren Zeit.
+- **Paperless-ngx**, **LAPS Connect** und **Defender Schwachstellen** speichern ihre Zugangsdaten zusätzlich mit einem eigenen Passwort verschlüsselt. Paperless-ngx und LAPS Connect sperren sich außerdem nach einer einstellbaren Zeit.
 - SharePoint, Teams und LAPS Connect melden sich per OAuth mit deinem eigenen Microsoft-Konto an. Sie sehen nur, worauf du ohnehin Zugriff hast.
 - Die Windows-Helfer lauschen nur auf `127.0.0.1`.
 

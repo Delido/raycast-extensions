@@ -1,0 +1,90 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "defender-schwachstellen",
+  "title": "Defender Schwachstellen",
+  "description": "Schwachstellen aus Microsoft Defender Vulnerability Management abrufen, durchsuchen und priorisieren. Zugangsdaten werden mit einem eigenen Passwort verschlüsselt.",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Security",
+    "Developer Tools"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "setup-credentials",
+      "title": "Defender-Zugangsdaten verwalten",
+      "subtitle": "Defender",
+      "description": "Zugangsdaten verschlüsselt hinterlegen, Secret erneuern oder Report-Passwort ändern.",
+      "mode": "view"
+    },
+    {
+      "name": "search",
+      "title": "Schwachstellen durchsuchen",
+      "subtitle": "Defender",
+      "description": "CVEs, Software und Geräte durchsuchen, inklusive Fundstellen.",
+      "mode": "view"
+    },
+    {
+      "name": "top-actions",
+      "title": "Top-Maßnahmen",
+      "subtitle": "Defender",
+      "description": "Updates nach Priorität: welche Maßnahme entfernt das meiste Risiko?",
+      "mode": "view"
+    },
+    {
+      "name": "refresh-report",
+      "title": "Schwachstellen-Report aktualisieren",
+      "subtitle": "Defender",
+      "description": "Fragt das Report-Passwort ab, holt die aktuellen Daten aus Defender und erzeugt den Report neu.",
+      "mode": "view"
+    },
+    {
+      "name": "open-report",
+      "title": "Schwachstellen-Report öffnen",
+      "subtitle": "Defender",
+      "description": "Öffnet den aktuellen HTML-Report im Browser.",
+      "mode": "no-view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "reportFolder",
+      "title": "Report-Ordner",
+      "description": "Optional: Ordner für die HTML-Reports. Leer = Datenordner der Extension.",
+      "type": "directory",
+      "required": false
+    },
+    {
+      "name": "demoMode",
+      "title": "Demodaten",
+      "label": "Report mit Demodaten erzeugen (ohne Defender-Zugang)",
+      "description": "Für Tests: erzeugt Beispieldaten statt Defender abzufragen.",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.10.1",
+    "@raycast/utils": "^2.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "typescript": "^5.8.2",
+    "@raycast/eslint-config": "^2.2.0",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "typecheck": "tsc --noEmit"
+  }
+}

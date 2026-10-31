@@ -125,6 +125,7 @@ foreach ($dir in Get-ChildItem $src -Directory) {
         Text      = if ($meta) { $meta.Text } else { $pkg.description }
         Group     = if ($meta) { $meta.Group } else { 'Weitere' }
         Helper    = if ($pkg.scripts) { $pkg.scripts.'build:helper' } else { $null }
+        Commands  = (@($pkg.commands | ForEach-Object { '"' + $_.title + '"' }) -join ', ')
         Installed = (Test-Path (Join-Path $Installed $pkg.name)) -or (Test-Path (Join-Path $Installed $dir.Name))
     }
 }
@@ -203,7 +204,7 @@ function Prepare-Helper($e) {
         if ($hasGo) { return }
         $target = Join-Path $dir $Matches[1]
         $file = Release-Asset (Split-Path $target -Leaf)
-        if (-not $file) { throw "$($e.Title): Hilfsprogramm $(Split-Path $target -Leaf) fehlt im Release – bitte Go installieren (winget install GoLang.Go)." }
+        if (-not $file) { throw "$($e.Title): Hilfsprogramm $(Split-Path $target -Leaf) fehlt im Release - bitte Go installieren (winget install GoLang.Go)." }
         New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
         Move-Item $file $target -Force
     }
@@ -228,12 +229,12 @@ function Install-Extension($e) {
     $log = Join-Path $Work "$($e.Dir).log"
     Prepare-Helper $e
 
-    Write-Host "  Abhängigkeiten …" -NoNewline -ForegroundColor DarkGray
+    Write-Host "  Abhängigkeiten ..." -NoNewline -ForegroundColor DarkGray
     $ci = Start-Process cmd.exe -ArgumentList '/c', 'npm ci --no-audit --no-fund --loglevel=error' -WorkingDirectory $dir -Wait -PassThru -WindowStyle Hidden -RedirectStandardOutput $log -RedirectStandardError "$log.err"
     if ($ci.ExitCode -ne 0) { Write-Host ''; throw "npm ci fehlgeschlagen:`n$(Get-Content "$log.err" -Raw)" }
 
     # "npm run dev" builds the extension and registers it in Raycast; it stays installed once it is ready
-    Write-Host ' bauen und anmelden …' -NoNewline -ForegroundColor DarkGray
+    Write-Host ' bauen und anmelden ...' -NoNewline -ForegroundColor DarkGray
     $command = "npm run dev > `"$log`" 2>&1"
     $dev = Start-Process cmd.exe -ArgumentList '/c', $command -WorkingDirectory $dir -PassThru -WindowStyle Hidden
     $deadline = (Get-Date).AddMinutes(4)
@@ -246,6 +247,10 @@ function Install-Extension($e) {
         elseif ($text -match 'error\S*\s+-\s|npm ERR!|npm error') { $result = 'error' }
         elseif ($dev.HasExited) { $result = 'exited' }
     }
+    # After "ready" ray still tells Raycast about the build (a raycast://cli/... deeplink, debounced and
+    # opened by a child process). Ending the process tree right away loses that message, and a new
+    # extension then never shows up in Raycast - so give it a moment.
+    if ($result -eq 'ok') { Start-Sleep -Seconds 5 }
     # ends the dev server (and its node child); it may have exited on its own already
     Start-Process taskkill.exe -ArgumentList '/T', '/F', '/PID', $dev.Id -Wait -WindowStyle Hidden
     if ($result -ne 'ok') {
@@ -253,7 +258,12 @@ function Install-Extension($e) {
         $tail = (Get-Content $log -Tail 15 -ErrorAction SilentlyContinue) -join "`n"
         throw "Bauen fehlgeschlagen ($(if ($result) { $result } else { 'Zeitüberschreitung' })):`n$tail"
     }
+    if (-not (Test-Path (Join-Path (Join-Path $Installed $e.Name) 'package.json'))) {
+        Write-Host ''
+        throw "Gebaut, aber nicht im Raycast-Ordner angekommen ($Installed\$($e.Name)). Läuft Raycast?"
+    }
     Write-Host ' fertig' -ForegroundColor Green
+    Say "  In Raycast suchen nach: $($e.Commands)" DarkGray
 }
 
 Step "Installiere $($selected.Count) Extension(s)"

@@ -17,7 +17,18 @@ Ordner aus Kommentaren werden zu Gruppen: `# --- FIRMA\CLUSTER\DIENST ---` (wie 
 | **Manage SSH Sources** | Zentrale Quellen verwalten, persönliche Standards (eigener User, Key) setzen |
 | **Sync SSH Sources** | Quellen jetzt abgleichen; läuft außerdem stündlich im Hintergrund |
 
-Aktionen auf einem Host: in neuem Fenster verbinden (Ctrl/Cmd+O), als anderer User verbinden (Ctrl/Cmd+U), in VS Code öffnen (Ctrl/Cmd+Shift+V), SSH-Befehl/Hostname/Config-Block kopieren, Host hinzufügen (Ctrl/Cmd+N), lokale Config öffnen.
+Aktionen auf einem Host: in neuem Fenster verbinden (Ctrl/Cmd+O), als anderer User verbinden (Ctrl/Cmd+U), in VS Code öffnen (Ctrl/Cmd+Shift+V), SSH-Befehl/Hostname/Config-Block kopieren, Host bearbeiten (Ctrl/Cmd+E), hinzufügen (Ctrl/Cmd+N), löschen bzw. ausblenden, lokale Config öffnen.
+
+### Hosts bearbeiten, hinzufügen, löschen
+
+Beim Speichern wählst du unter **Save For**, wo die Änderung landet:
+
+- **Only Me:** in deiner `~/.ssh/config`. Bei einem Team-Host entsteht eine eigene Version, die den Team-Eintrag überdeckt; **Remove Local Override** stellt den Team-Eintrag wieder her.
+- **Team: \<Quelle\>:** als Commit ins OneDev-Repository (Token mit Schreibrecht nötig) bzw. direkt in die Datei auf der Freigabe. Alle bekommen die Änderung beim nächsten Sync. HTTPS-Quellen sind nur lesbar. Identity Files werden nie in Team-Quellen geschrieben.
+
+Team-Hosts lassen sich mit **Hide for Me** nur bei dir ausblenden (unten in der Liste wieder einblendbar) oder mit **Delete from Team Source** für alle löschen.
+
+Verbindest du dich mit einem Team-Host, bevor der Include-Block in `~/.ssh/config` eingerichtet ist, bietet Raycast an, ihn anzulegen – sonst kennt `ssh` den Alias nicht („Could not resolve hostname“).
 
 ## Zentrale Quellen
 

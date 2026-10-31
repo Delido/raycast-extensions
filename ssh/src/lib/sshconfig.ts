@@ -19,6 +19,8 @@ export interface HostEntry {
   proxyJump?: string;
   identityFile?: string;
   group?: string;
+  /** the "# section:" / folder heading the host is under (its group unless "# group:" says otherwise) */
+  section?: string;
   tags: string[];
   description?: string;
   /** URL to open in the browser through the tunnel ("# web: …") */
@@ -89,6 +91,7 @@ export function parseConfig(text: string, origin: string, file: string): HostEnt
         .map((alias) => ({
           alias,
           group: pending.group ?? section,
+          section,
           tags: pending.tags,
           description: pending.description,
           web: pending.web,

@@ -144,6 +144,73 @@ async function onedevFetch(source: Source, knownVersion?: string): Promise<Fetch
   return { unchanged: false, version: head.commitHash, files: [{ name: target, text: await readFile(target) }] };
 }
 
+/**
+ * Changes one file of a source: a commit to the OneDev branch, or a write to the file on the share.
+ * The file is read fresh right before, so changes others made since the last sync are kept.
+ * HTTPS sources are read-only.
+ */
+export async function writeSourceFile(
+  source: Source,
+  file: string,
+  transform: (text: string) => string,
+  commitMessage: string,
+) {
+  if (source.type === "http") throw new Error("HTTPS sources are read-only – change the host at the source");
+  if (source.type === "file") {
+    const target = (source.path ?? "").trim();
+    const full = (await fs.stat(target)).isDirectory()
+      ? path.isAbsolute(file)
+        ? file
+        : path.join(target, file)
+      : target;
+    const text = await fs.readFile(full, "utf8").catch(() => "");
+    await fs.writeFile(full, transform(text));
+    return;
+  }
+
+  const base = (source.serverUrl ?? "").trim().replace(/\/+$/, "");
+  const headers = { Authorization: `Bearer ${(source.token ?? "").trim()}`, Accept: "application/json" };
+  const call = async (apiPath: string, init?: RequestInit) => {
+    const res = await fetch(`${base}/~api/${apiPath}`, { ...init, headers: { ...headers, ...init?.headers } });
+    const text = await res.text();
+    if (res.status === 401 || res.status === 403)
+      throw new Error("The OneDev token may not write to this repository (needs code write access)");
+    if (!res.ok) throw new Error(`OneDev ${res.status}: ${text.slice(0, 200) || res.statusText}`);
+    return text;
+  };
+  const projectPath = (source.project ?? "").trim().replace(/^\/+|\/+$/g, "");
+  const projects = JSON.parse(
+    await call(`projects?query=${encodeURIComponent(`"Path" is "${projectPath}"`)}&offset=0&count=1`),
+  ) as { id: number }[];
+  if (!projects.length) throw new Error(`OneDev project "${projectPath}" not found or no access`);
+  const projectId = projects[0].id;
+  const branch = (source.branch ?? "").trim() || "main";
+  const head = JSON.parse(await call(`repositories/${projectId}/branches/${encodeURIComponent(branch)}`)) as {
+    commitHash: string;
+  };
+  let current = "";
+  try {
+    const res = JSON.parse(
+      await call(
+        `repositories/${projectId}/files?revision=${encodeURIComponent(head.commitHash)}&file=${encodeURIComponent(file)}`,
+      ),
+    ) as { base64Content: string };
+    current = Buffer.from(res.base64Content, "base64").toString("utf8");
+  } catch (error) {
+    if (/OneDev 404/.test((error as Error).message) === false) throw error; // a new file is fine
+  }
+  const encode = (p: string) => p.split("/").map(encodeURIComponent).join("/");
+  await call(`repositories/${projectId}/files/${encode(branch)}/${encode(file)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      "@type": "FileCreateOrUpdateRequest",
+      commitMessage,
+      base64Content: Buffer.from(transform(current), "utf8").toString("base64"),
+    }),
+  });
+}
+
 async function httpFetch(source: Source, knownVersion?: string): Promise<FetchResult> {
   const headers: Record<string, string> = {};
   if (source.headerName?.trim() && source.headerValue) headers[source.headerName.trim()] = source.headerValue;

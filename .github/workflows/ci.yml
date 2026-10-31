@@ -43,6 +43,21 @@ jobs:
       - name: Prettier
         run: npx prettier --check src
 
+  installer:
+    name: install.ps1
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      # "irm … | iex" fails on a byte order mark: the invisible first character breaks the comment block
+      - name: No BOM, parses in Windows PowerShell
+        shell: powershell
+        run: |
+          $bytes = [IO.File]::ReadAllBytes('install.ps1')
+          if ($bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF) { throw 'install.ps1 must be saved without BOM' }
+          $errors = $null
+          [void][Management.Automation.Language.Parser]::ParseInput([Text.Encoding]::UTF8.GetString($bytes), [ref]$null, [ref]$errors)
+          if ($errors) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
+
   go:
     name: go vet (${{ matrix.dir }})
     runs-on: windows-latest

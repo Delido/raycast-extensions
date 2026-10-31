@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Installiert oder aktualisiert die Raycast-Extensions aus github.com/Delido/raycast-extensions.
 

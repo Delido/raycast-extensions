@@ -236,23 +236,34 @@ function Install-Extension($e) {
     # "npm run dev" builds the extension and registers it in Raycast; it stays installed once it is ready
     Write-Host ' bauen und anmelden ...' -NoNewline -ForegroundColor DarkGray
     $command = "npm run dev > `"$log`" 2>&1"
-    $dev = Start-Process cmd.exe -ArgumentList '/c', $command -WorkingDirectory $dir -PassThru -WindowStyle Hidden
-    $deadline = (Get-Date).AddMinutes(4)
-    $result = $null
-    while ((Get-Date) -lt $deadline -and -not $result) {
-        Start-Sleep -Milliseconds 700
-        $text = Get-Content $log -Raw -ErrorAction SilentlyContinue
-        # ray colours its output, so "ready"/"error" are followed by an ANSI code before " - "
-        if ($text -match 'ready\S*\s+-\s+built extension') { $result = 'ok' }
-        elseif ($text -match 'error\S*\s+-\s|npm ERR!|npm error') { $result = 'error' }
-        elseif ($dev.HasExited) { $result = 'exited' }
+    # ray builds into a temporary folder and then renames it into Raycast's folder. While Raycast or a
+    # virus scanner holds a file of the previous version open, Windows refuses (EPERM/EBUSY): wait and
+    # try again.
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        # leftovers of an interrupted build
+        Get-ChildItem $Installed -Directory -Filter '.raycast-build-*' -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        $dev = Start-Process cmd.exe -ArgumentList '/c', $command -WorkingDirectory $dir -PassThru -WindowStyle Hidden
+        $deadline = (Get-Date).AddMinutes(4)
+        $result = $null
+        while ((Get-Date) -lt $deadline -and -not $result) {
+            Start-Sleep -Milliseconds 700
+            $text = Get-Content $log -Raw -ErrorAction SilentlyContinue
+            # ray colours its output, so "ready"/"error" are followed by an ANSI code before " - "
+            if ($text -match 'ready\S*\s+-\s+built extension') { $result = 'ok' }
+            elseif ($text -match 'error\S*\s+-\s|npm ERR!|npm error') { $result = 'error' }
+            elseif ($dev.HasExited) { $result = 'exited' }
+        }
+        # After "ready" ray still tells Raycast about the build (a raycast://cli/... deeplink, debounced and
+        # opened by a child process). Ending the process tree right away loses that message, and a new
+        # extension then never shows up in Raycast - so give it a moment.
+        if ($result -eq 'ok') { Start-Sleep -Seconds 5 }
+        # ends the dev server (and its node child); it may have exited on its own already
+        Start-Process taskkill.exe -ArgumentList '/T', '/F', '/PID', $dev.Id -Wait -WindowStyle Hidden
+        $locked = $result -ne 'ok' -and ((Get-Content $log -Raw -ErrorAction SilentlyContinue) -match 'EPERM|EBUSY|EACCES')
+        if (-not $locked -or $attempt -eq 3) { break }
+        Write-Host " Datei gesperrt, neuer Versuch ($($attempt + 1)/3) ..." -NoNewline -ForegroundColor DarkYellow
+        Start-Sleep -Seconds (3 * $attempt)
     }
-    # After "ready" ray still tells Raycast about the build (a raycast://cli/... deeplink, debounced and
-    # opened by a child process). Ending the process tree right away loses that message, and a new
-    # extension then never shows up in Raycast - so give it a moment.
-    if ($result -eq 'ok') { Start-Sleep -Seconds 5 }
-    # ends the dev server (and its node child); it may have exited on its own already
-    Start-Process taskkill.exe -ArgumentList '/T', '/F', '/PID', $dev.Id -Wait -WindowStyle Hidden
     if ($result -ne 'ok') {
         Write-Host ''
         $tail = (Get-Content $log -Tail 15 -ErrorAction SilentlyContinue) -join "`n"

@@ -36,6 +36,7 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 | | Extension | Wofür | Plattform |
 |---|---|---|---|
 | <img src="window-drag/assets/icon.png" width="28" alt="window-drag"> | **[Window Drag](window-drag/)** | Fenster mit Alt + Maus ziehen verschieben und in der Größe ändern, wie AltSnap | Windows |
+| <img src="bulk-rename/assets/icon.png" width="28" alt="bulk-rename"> | **[Bulk Rename](bulk-rename/)** | Viele Dateien umbenennen wie mit PowerRename: Suchen/Ersetzen, Regex, Nummerierung, Datum, Groß/klein, Live-Vorschau, Rückgängig | Windows, macOS |
 | <img src="keep-awake/assets/icon.png" width="28" alt="keep-awake"> | **[Keep Awake](keep-awake/)** | Rechner wach halten, optional Teams-Status auf Verfügbar | Windows, macOS |
 | <img src="mtr/assets/icon.png" width="28" alt="mtr"> | **[MTR](mtr/)** | Traceroute wie WinMTR mit Graphen, Überwachung im Hintergrund, Alarme, HTML-Bericht | Windows |
 | <img src="paperless/assets/icon.png" width="28" alt="paperless"> | **[Paperless-ngx](paperless/)** | Dokumente suchen, bearbeiten, herunterladen und hochladen, mit Passwortsperre | Windows, macOS |

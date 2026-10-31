@@ -1,0 +1,49 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "bulk-rename",
+  "title": "Bulk Rename",
+  "description": "Rename many files at once like PowerRename: search and replace, regular expressions, numbering, dates and case, with live preview and undo",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "System",
+    "Productivity"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "Windows",
+    "macOS"
+  ],
+  "commands": [
+    {
+      "name": "rename-files",
+      "title": "Bulk Rename",
+      "description": "Rename the files and folders selected in File Explorer (or Finder) with a live preview",
+      "mode": "view"
+    },
+    {
+      "name": "undo-rename",
+      "title": "Undo Last Bulk Rename",
+      "description": "Restore the names from before the last bulk rename",
+      "mode": "no-view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "19.3.0",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

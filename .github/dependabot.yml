@@ -4,6 +4,7 @@ updates:
     directories:
       - /amp
       - /bookstack
+      - /bulk-rename
       - /checkmk
       - /cs2-nades
       - /defender-security

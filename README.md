@@ -45,7 +45,24 @@ Was jede Extension genau kann und wie sie eingerichtet wird, steht in ihrer eige
 
 ## Installation
 
-Voraussetzungen: [Raycast](https://www.raycast.com) für Windows oder macOS, [Node.js](https://nodejs.org) 22 oder neuer und Git.
+Voraussetzung: [Raycast](https://www.raycast.com) für Windows. In PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/Delido/raycast-extensions/main/install.ps1 | iex
+```
+
+Das Skript zeigt eine Auswahl (Nummern, Bereiche wie `1,3,5-7` oder `a` für alle), lädt die Extensions, baut sie und meldet sie in Raycast an. Git brauchst du nicht. Fehlt Node.js, bietet es die Installation per winget an. Die Hilfsprogramme (MTR, Power Plan, SignalRGB, Window Drag) lädt es aus dem neuesten Release, wenn Go nicht installiert ist.
+
+**Aktualisieren:** dasselbe Kommando ausführen und Enter drücken, dann werden alle installierten Extensions neu gebaut. Ohne Menü, z. B. in Skripten:
+
+```powershell
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Delido/raycast-extensions/main/install.ps1))) -Extensions paperless,ssh
+& ([scriptblock]::Create((irm https://raw.githubusercontent.com/Delido/raycast-extensions/main/install.ps1))) -Update
+```
+
+### Von Hand (Windows und macOS)
+
+Voraussetzungen: [Node.js](https://nodejs.org) 22 oder neuer und Git.
 
 ```sh
 git clone https://github.com/Delido/raycast-extensions.git

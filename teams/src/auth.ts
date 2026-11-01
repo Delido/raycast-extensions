@@ -1,5 +1,6 @@
 import { getPreferenceValues, OAuth } from "@raycast/api";
 import { OAuthService } from "@raycast/utils";
+import { windowsSignOut, windowsToken } from "./winauth";
 
 // Delegated permissions only: everything happens on behalf of the signed-in user.
 const SCOPES = [
@@ -20,8 +21,12 @@ const SCOPES = [
 ];
 
 export function getConfig() {
-  const { tenantId, clientId } = getPreferenceValues<Preferences>();
-  return { tenantId: tenantId?.trim() || "organizations", clientId: clientId?.trim() ?? "" };
+  const { tenantId, clientId, signIn } = getPreferenceValues<Preferences>();
+  return {
+    tenantId: tenantId?.trim() || "organizations",
+    clientId: clientId?.trim() ?? "",
+    windows: signIn === "windows",
+  };
 }
 
 export const client = new OAuth.PKCEClient({
@@ -57,6 +62,8 @@ let pending: Promise<string> | undefined;
  * Concurrent callers share one sign-in so parallel requests don't start competing OAuth flows.
  */
 export function getAccessToken(): Promise<string> {
+  const { tenantId, clientId, windows } = getConfig();
+  if (windows) return windowsToken(tenantId, clientId, SCOPES);
   if (!pending) {
     pending = getService()
       .authorize()
@@ -68,5 +75,7 @@ export function getAccessToken(): Promise<string> {
 }
 
 export async function signOut() {
+  const { tenantId, clientId, windows } = getConfig();
+  if (windows) await windowsSignOut(tenantId, clientId);
   await client.removeTokens();
 }

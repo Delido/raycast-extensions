@@ -76,6 +76,24 @@
       "placeholder": "00000000-0000-0000-0000-000000000000"
     },
     {
+      "name": "signIn",
+      "title": "Sign-In",
+      "description": "Browser works everywhere. Windows account signs in with the work account of Windows (single sign-on, MFA in the Windows dialog); the app registration then needs the redirect URI ms-appx-web://microsoft.aad.brokerplugin/<client id> (Mobile and desktop applications).",
+      "type": "dropdown",
+      "required": false,
+      "default": "browser",
+      "data": [
+        {
+          "title": "Browser",
+          "value": "browser"
+        },
+        {
+          "title": "Windows Account (Single Sign-On)",
+          "value": "windows"
+        }
+      ]
+    },
+    {
       "name": "openIn",
       "title": "Open Links In",
       "description": "Open chats, channels and meetings in the Teams app or in the browser",
@@ -102,7 +120,10 @@
     "build": "ray build",
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
-    "lint": "ray lint"
+    "lint": "ray lint",
+    "build:helper": "node ../scripts/build-win-auth.mjs assets/win-auth",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.2.0",

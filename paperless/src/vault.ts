@@ -1,12 +1,15 @@
 import { Cache, environment, getPreferenceValues, LocalStorage } from "@raycast/api";
-import { createCipheriv, createDecipheriv, randomBytes, scrypt as scryptCb } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, scrypt as scryptCb } from "node:crypto";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { hello } from "./winauth";
 
 /*
  * The API token is stored encrypted with the user's password (scrypt + AES-256-GCM), never in the
  * preferences. Unlocking keeps the token in a session that expires after the auto-lock time.
+ * Optionally a second copy is encrypted with a key derived from a Windows Hello signature, so
+ * Windows Hello can unlock as well; the password always keeps working.
  */
 
 const scrypt = promisify(scryptCb) as (pw: string, salt: Buffer, len: number, opts: object) => Promise<Buffer>;
@@ -15,12 +18,22 @@ const KDF = { N: 2 ** 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 const VAULT_KEY = "vault";
 const SESSION_KEY = "session";
 const FAILS_KEY = "unlock-fails";
+const HELLO_KEY = "hello";
+const HELLO_NAME = "Delido.Raycast.paperless";
 const MAX_FAILS = 5;
 const LOCKOUT_MS = 30_000;
 
 interface Vault {
   v: 1;
   salt: string;
+  iv: string;
+  tag: string;
+  data: string;
+}
+
+interface HelloVault {
+  v: 1;
+  challenge: string;
   iv: string;
   tag: string;
   data: string;
@@ -147,9 +160,60 @@ export async function changePassword(oldPassword: string, newPassword: string): 
   return true;
 }
 
-/** Forgets token and password completely. */
+/** Forgets token, password and the Windows Hello key completely. */
 export async function resetVault() {
   await lock();
+  await disableHello();
   await LocalStorage.removeItem(VAULT_KEY);
   await LocalStorage.removeItem(FAILS_KEY);
+}
+
+export async function helloEnabled(): Promise<boolean> {
+  return !!(await LocalStorage.getItem<string>(HELLO_KEY));
+}
+
+async function helloKey(challenge: Buffer): Promise<Buffer> {
+  return createHash("sha256")
+    .update(await hello.sign(HELLO_NAME, challenge))
+    .digest();
+}
+
+/** Lets Windows Hello unlock too (while unlocked; Windows asks for PIN, fingerprint or face). */
+export async function enableHello() {
+  const token = await getToken();
+  await hello.create(HELLO_NAME);
+  const challenge = randomBytes(32);
+  const iv = randomBytes(12);
+  const cipher = createCipheriv("aes-256-gcm", await helloKey(challenge), iv);
+  const data = Buffer.concat([cipher.update(token, "utf8"), cipher.final()]);
+  const blob: HelloVault = {
+    v: 1,
+    challenge: challenge.toString("base64"),
+    iv: iv.toString("base64"),
+    tag: cipher.getAuthTag().toString("base64"),
+    data: data.toString("base64"),
+  };
+  await LocalStorage.setItem(HELLO_KEY, JSON.stringify(blob));
+}
+
+export async function disableHello() {
+  if (await helloEnabled()) await hello.remove(HELLO_NAME);
+  await LocalStorage.removeItem(HELLO_KEY);
+}
+
+/** Unlocks with Windows Hello; false if the key does not fit (then use the password). */
+export async function unlockWithHello(): Promise<boolean> {
+  const raw = await LocalStorage.getItem<string>(HELLO_KEY);
+  if (!raw) return false;
+  const blob = JSON.parse(raw) as HelloVault;
+  const key = await helloKey(Buffer.from(blob.challenge, "base64"));
+  try {
+    const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(blob.iv, "base64"));
+    decipher.setAuthTag(Buffer.from(blob.tag, "base64"));
+    const token = Buffer.concat([decipher.update(Buffer.from(blob.data, "base64")), decipher.final()]).toString("utf8");
+    await startSession(token);
+    return true;
+  } catch {
+    return false;
+  }
 }

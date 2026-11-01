@@ -1,6 +1,7 @@
 name: Release
 
-# Push a tag like v1.2.0 to publish the prebuilt Windows helpers.
+# Push a tag like v1.2.0 to publish the prebuilt Windows helpers (install.ps1 downloads them
+# when Go or the .NET SDK is not installed).
 on:
   push:
     tags: ["v*"]
@@ -24,6 +25,8 @@ jobs:
           (cd power-plan && node ../scripts/build-go-helper.mjs helper assets/power-helper.exe)
           (cd signalrgb && node ../scripts/build-go-helper.mjs helper assets/signal-helper.exe --gui)
           (cd window-drag && node ../scripts/build-go-helper.mjs helper assets/drag-helper.exe --gui)
+          node scripts/build-win-auth.mjs win-auth
+          (cd win-auth && powershell -NoProfile -Command "Compress-Archive -Path * -DestinationPath ../win-auth.zip")
       - name: Create release
         shell: bash
         env:
@@ -33,4 +36,5 @@ jobs:
             mtr/assets/mtr-probe.exe \
             power-plan/assets/power-helper.exe \
             signalrgb/assets/signal-helper.exe \
-            window-drag/assets/drag-helper.exe
+            window-drag/assets/drag-helper.exe \
+            win-auth.zip

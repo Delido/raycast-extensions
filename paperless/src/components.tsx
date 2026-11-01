@@ -29,7 +29,7 @@ import {
   toMeta,
   updateDocument,
 } from "./api";
-import { ChangePasswordForm } from "./gate";
+import { ChangePasswordForm, HelloAction } from "./gate";
 import { lock } from "./vault";
 
 export function useMeta() {
@@ -333,6 +333,7 @@ export function DocumentItem({
               }}
             />
             <Action.Push title="Change Password" icon={Icon.Key} target={<ChangePasswordForm />} />
+            <HelloAction />
           </ActionPanel.Section>
         </ActionPanel>
       }

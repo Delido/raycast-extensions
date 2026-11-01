@@ -96,7 +96,10 @@
     "build": "ray build",
     "dev": "ray develop",
     "fix-lint": "ray lint --fix",
-    "lint": "ray lint"
+    "lint": "ray lint",
+    "build:helper": "node ../scripts/build-win-auth.mjs assets/win-auth",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
   },
   "devDependencies": {
     "@raycast/eslint-config": "^2.2.0",

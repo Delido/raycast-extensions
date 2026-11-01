@@ -2,7 +2,20 @@ import { Action, ActionPanel, Alert, confirmAlert, Form, Icon, showToast, Toast,
 import { showFailureToast } from "@raycast/utils";
 import { ReactNode, useEffect, useState } from "react";
 import { serverUrl, verifyToken } from "./api";
-import { changePassword, createVault, hasVault, isUnlocked, lockoutRemaining, resetVault, unlock } from "./vault";
+import {
+  changePassword,
+  createVault,
+  disableHello,
+  enableHello,
+  hasVault,
+  helloEnabled,
+  isUnlocked,
+  lockoutRemaining,
+  resetVault,
+  unlock,
+  unlockWithHello,
+} from "./vault";
+import { hello } from "./winauth";
 
 const MIN_PASSWORD = 6;
 
@@ -73,11 +86,31 @@ function SetupForm({ onDone }: { onDone: () => void }) {
 
 function UnlockForm({ onUnlocked, onReset }: { onUnlocked: () => void; onReset: () => void }) {
   const [error, setError] = useState<string>();
+  const [withHello, setWithHello] = useState(false);
+
+  const tryHello = async () => {
+    try {
+      if (await unlockWithHello()) onUnlocked();
+      else setError("Windows Hello could not unlock – use the password");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  // with Windows Hello enabled, ask for it right away; the password stays as the fallback
+  useEffect(() => {
+    helloEnabled().then((enabled) => {
+      setWithHello(enabled);
+      if (enabled) tryHello();
+    });
+  }, []);
+
   return (
     <Form
       navigationTitle="Paperless Locked"
       actions={
         <ActionPanel>
+          {withHello && <Action title="Unlock with Windows Hello" icon={Icon.Fingerprint} onAction={tryHello} />}
           <Action.SubmitForm
             title="Unlock"
             icon={Icon.LockUnlocked}
@@ -114,7 +147,14 @@ function UnlockForm({ onUnlocked, onReset }: { onUnlocked: () => void; onReset: 
         </ActionPanel>
       }
     >
-      <Form.Description title="🔒 Locked" text="Enter your Paperless password to continue." />
+      <Form.Description
+        title="🔒 Locked"
+        text={
+          withHello
+            ? "Confirm with Windows Hello, or enter your Paperless password."
+            : "Enter your Paperless password to continue."
+        }
+      />
       <Form.PasswordField id="password" title="Password" error={error} onChange={() => setError(undefined)} />
     </Form>
   );
@@ -150,6 +190,43 @@ export function ChangePasswordForm() {
       <Form.PasswordField id="password" title="New Password" error={errors.password} />
       <Form.PasswordField id="confirm" title="Repeat New Password" error={errors.confirm} />
     </Form>
+  );
+}
+
+/** Enable or disable unlocking with Windows Hello (shown while unlocked). */
+export function HelloAction() {
+  const [state, setState] = useState<"unavailable" | "off" | "on">();
+  useEffect(() => {
+    (async () => setState((await helloEnabled()) ? "on" : (await hello.available()) ? "off" : "unavailable"))();
+  }, []);
+  if (!state || state === "unavailable") return null;
+  return state === "on" ? (
+    <Action
+      title="Disable Windows Hello"
+      icon={Icon.Fingerprint}
+      onAction={async () => {
+        await disableHello();
+        setState("off");
+        await showToast({ title: "Windows Hello unlock disabled" });
+      }}
+    />
+  ) : (
+    <Action
+      title="Enable Windows Hello"
+      icon={Icon.Fingerprint}
+      onAction={async () => {
+        const toast = await showToast({ style: Toast.Style.Animated, title: "Waiting for Windows Hello…" });
+        try {
+          await enableHello();
+          setState("on");
+          toast.style = Toast.Style.Success;
+          toast.title = "Paperless can now be unlocked with Windows Hello";
+        } catch (error) {
+          toast.hide();
+          await showFailureToast(error, { title: "Windows Hello not enabled" });
+        }
+      }}
+    />
   );
 }
 

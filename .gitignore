@@ -9,3 +9,6 @@ Thumbs.db
 # Go helpers are built locally (npm run dev) or downloaded from the GitHub releases
 */assets/*.exe
 */assets/*.exe~
+
+# Windows Hello / sign-in helper (helpers/win-auth), built by npm run dev/build
+*/assets/win-auth/

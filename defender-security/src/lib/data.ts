@@ -177,10 +177,28 @@ export async function loadModel(groupFilter?: string): Promise<Model> {
   return buildModel(await loadRaw(), groupFilter);
 }
 
+export const tagNames = (raw: RawReport) =>
+  [...new Set(raw.devices.flatMap((d) => d.t ?? []))].sort((a, b) => a.localeCompare(b, "de"));
+
+/**
+ * Device filter: "" = all, "Gruppe" = this group, "!Gruppe" = all except this group,
+ * "#Tag" = devices with this tag, "!#Tag" = all except devices with this tag (e.g. private devices).
+ */
+export function deviceFilter(filter?: string): (d: { g: string; t?: string[] }) => boolean {
+  if (!filter) return () => true;
+  const not = filter.startsWith("!");
+  const rest = not ? filter.slice(1) : filter;
+  const hit = rest.startsWith("#")
+    ? (d: { t?: string[] }) => (d.t ?? []).includes(rest.slice(1))
+    : (d: { g: string }) => d.g === rest;
+  return not ? (d) => !hit(d) : hit;
+}
+
 export const groupNames = (raw: RawReport) =>
   [...new Set(raw.devices.map((d) => d.g))].sort((a, b) => a.localeCompare(b, "de"));
 
 export function buildModel(raw: RawReport, groupFilter?: string): Model {
+  const keep = deviceFilter(groupFilter);
   const f = raw.f;
   const generated = new Date(raw.meta.generated);
   const today = Math.floor(generated.getTime() / 86400000);
@@ -194,7 +212,7 @@ export function buildModel(raw: RawReport, groupFilter?: string): Model {
   const all = new Uint32Array(total);
   for (let i = 0; i < total; i++) {
     const o = i * FIELDS;
-    if (!groupFilter || raw.devices[f[o + DEV]].g === groupFilter) all[n++] = o;
+    if (keep(raw.devices[f[o + DEV]])) all[n++] = o;
   }
   const offsets = all.slice(0, n).sort((a, b) => f[a + DEV] - f[b + DEV] || a - b);
 

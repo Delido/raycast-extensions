@@ -1,5 +1,5 @@
 import { createWriteStream } from "fs";
-import { copyFile, mkdir, readFile, writeFile } from "fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
 import { gunzipSync, gzipSync } from "zlib";
 import {
@@ -11,8 +11,17 @@ import {
   slimMachine,
   slimRecommendation,
 } from "./builder";
-import { dataDir, reportFindingsPath, reportHtmlPath, reportJsonPath, reportsDir, templatePath } from "./data";
-import { DEFAULT_API_BASE, Log, fetchPages, getToken } from "./defender";
+import {
+  dataDir,
+  prefs,
+  reportDefaultFilter,
+  reportFindingsPath,
+  reportHtmlPath,
+  reportJsonPath,
+  reportsDir,
+  templatePath,
+} from "./data";
+import { DEFAULT_API_BASE, Log, fetchPages, getToken, tokenSource } from "./defender";
 import { demoData, demoHistory } from "./demo";
 import { Credentials } from "./vault";
 
@@ -55,6 +64,20 @@ const stamp = (d: Date) => d.toISOString().slice(0, 16).replace(/[-:]/g, "").rep
 // "</" maskieren, damit nichts aus den Daten das <script>-Element im HTML beenden kann
 const safe = (s: string) => s.replace(/<\//g, "<\\/");
 
+const DATED = /^Defender-Schwachstellen_\d{8}_\d{4}\.html$/;
+
+/** Behält die neuesten datierten Reports (Einstellung, Standard 30); löscht nur Dateien mit genau diesem Namensmuster. */
+async function pruneReports(log: Log) {
+  const keep = Number(prefs().keepReports ?? "30");
+  if (!keep) return;
+  const old = (await readdir(reportsDir()).catch(() => [] as string[]))
+    .filter((f) => DATED.test(f))
+    .sort() // Zeitstempel im Namen: alphabetisch = zeitlich
+    .slice(0, -keep);
+  for (const f of old) await rm(path.join(reportsDir(), f), { force: true }).catch(() => undefined);
+  if (old.length) log(`${old.length} ältere Report(s) gelöscht (behalten: ${keep})`);
+}
+
 async function writeChunks(file: string, chunks: Iterable<string>) {
   const out = createWriteStream(file, "utf8");
   for (const c of chunks) if (!out.write(c)) await new Promise((r) => out.once("drain", r));
@@ -89,7 +112,7 @@ export async function generateReport(opts: GenerateOptions) {
     if (!opts.creds) throw new Error("Keine Zugangsdaten.");
     const base = opts.creds.apiBaseUrl || DEFAULT_API_BASE;
     log("Melde an …");
-    const token = await getToken(opts.creds);
+    const token = tokenSource(opts.creds, await getToken(opts.creds));
     previousState = await readState();
 
     // Geräte und Empfehlungen zuerst, damit die Funde direkt beim Abruf verknüpft werden können
@@ -179,6 +202,8 @@ export async function generateReport(opts: GenerateOptions) {
       tenant: opts.tenantName,
       demo: opts.demo,
       sources: { machines: hadMachines, recommendations: recommendations !== null, changes: changes !== null },
+      // Startfilter des Reports: private Geräte erst einmal ausblenden (im Filter wieder wählbar)
+      defaultFilter: reportDefaultFilter(builder.devices),
     },
     devices: builder.devices,
     sw: builder.sw,
@@ -212,6 +237,7 @@ export async function generateReport(opts: GenerateOptions) {
   // Für Raycast: Stammdaten als JSON, Funde binär (Int32, 6 Werte je Fund) – passt so in Raycasts 100-MB-Heap
   await writeFile(reportFindingsPath(), builder.findingsBuffer());
   await writeFile(reportJsonPath(), headJson, "utf8");
+  await pruneReports(log);
 
   log("");
   log(

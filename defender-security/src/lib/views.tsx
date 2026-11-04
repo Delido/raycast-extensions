@@ -15,9 +15,14 @@ import {
   defenderCveUrl,
   defenderDeviceUrl,
   fmt,
+  groupNames,
   nvdUrl,
   openReport,
+  privateFilter,
+  RawReport,
+  tagNames,
 } from "./data";
+import { useMemo, useState } from "react";
 
 const SEV_COLOR = [Color.SecondaryText, Color.Yellow, Color.Orange, Color.Red];
 export const sevIcon = (s: number) => ({ source: Icon.CircleFilled, tintColor: SEV_COLOR[s] });
@@ -134,6 +139,23 @@ export function deviceMarkdown(m: Model, d: DeviceAgg) {
 
 /* ---------- Listeneinträge ---------- */
 
+// Die Detail-Markdowns laufen über alle Funde. Raycast zeigt nur das Detail der ausgewählten Zeile,
+// deshalb wird nur dafür gerechnet und das Ergebnis je Modell zwischengespeichert.
+const mdCache = new WeakMap<Model, Map<string, string>>();
+function detailMarkdown(m: Model, id: string, make: () => string): string {
+  let cache = mdCache.get(m);
+  if (!cache) mdCache.set(m, (cache = new Map()));
+  let md = cache.get(id);
+  if (md === undefined) cache.set(id, (md = make()));
+  return md;
+}
+const itemDetail = (show: boolean, selected: boolean, m: Model, id: string, make: () => string) =>
+  show ? <List.Item.Detail markdown={selected ? detailMarkdown(m, id, make) : ""} /> : undefined;
+
+export const softwareId = (a: SoftwareAgg) => "sw:" + a.i;
+export const cveId = (b: CveAgg) => "cve:" + b.i;
+export const deviceId = (d: DeviceAgg) => "dev:" + d.i;
+
 const reportAction = (hash: string) => (
   <Action title="Im Report öffnen" icon={Icon.Globe} onAction={() => openReport(hash)} />
 );
@@ -143,17 +165,19 @@ export function SoftwareItem({
   a,
   title,
   showDetail,
+  selected,
   toggleDetail,
 }: {
   m: Model;
   a: SoftwareAgg;
   title?: string;
   showDetail: boolean;
+  selected: boolean;
   toggleDetail: () => void;
 }) {
   return (
     <List.Item
-      id={"sw:" + a.i}
+      id={softwareId(a)}
       icon={sevIcon(a.sevCves[3] ? 3 : a.sevCves[2] ? 2 : a.sevCves[1] ? 1 : 0)}
       title={title ?? a.name}
       subtitle={showDetail ? undefined : a.action}
@@ -170,7 +194,7 @@ export function SoftwareItem({
               { text: compact(a.score), tooltip: "Priorität" },
             ]
       }
-      detail={showDetail ? <List.Item.Detail markdown={softwareMarkdown(m, a)} /> : undefined}
+      detail={itemDetail(showDetail, selected, m, softwareId(a), () => softwareMarkdown(m, a))}
       actions={
         <ActionPanel>
           {reportAction("sw=" + encodeURIComponent(a.key))}
@@ -200,17 +224,19 @@ export function CveItem({
   m,
   b,
   showDetail,
+  selected,
   toggleDetail,
 }: {
   m: Model;
   b: CveAgg;
   showDetail: boolean;
+  selected: boolean;
   toggleDetail: () => void;
 }) {
   const swNames = b.sws.map((si) => swNameOf(m, si)).join(", ");
   return (
     <List.Item
-      id={"cve:" + b.i}
+      id={cveId(b)}
       icon={sevIcon(b.s)}
       title={b.id}
       subtitle={showDetail ? undefined : swNames}
@@ -225,7 +251,7 @@ export function CveItem({
               ...(b.recent ? [{ text: `+${fmt(b.recent)}`, tooltip: m.newLabel }] : []),
             ]
       }
-      detail={showDetail ? <List.Item.Detail markdown={cveMarkdown(m, b)} /> : undefined}
+      detail={itemDetail(showDetail, selected, m, cveId(b), () => cveMarkdown(m, b))}
       actions={
         <ActionPanel>
           {reportAction("cve=" + encodeURIComponent(b.id))}
@@ -253,11 +279,13 @@ export function DeviceItem({
   m,
   d,
   showDetail,
+  selected,
   toggleDetail,
 }: {
   m: Model;
   d: DeviceAgg;
   showDetail: boolean;
+  selected: boolean;
   toggleDetail: () => void;
 }) {
   const devicePaths = () => {
@@ -268,7 +296,7 @@ export function DeviceItem({
   };
   return (
     <List.Item
-      id={"dev:" + d.i}
+      id={deviceId(d)}
       icon={{ source: Icon.Monitor, tintColor: d.sev[3] ? Color.Red : d.sev[2] ? Color.Orange : undefined }}
       title={d.name}
       subtitle={showDetail ? undefined : `${d.group} · ${d.os}`}
@@ -284,7 +312,7 @@ export function DeviceItem({
               ...(d.recent ? [{ text: `+${fmt(d.recent)}`, tooltip: m.newLabel }] : []),
             ]
       }
-      detail={showDetail ? <List.Item.Detail markdown={deviceMarkdown(m, d)} /> : undefined}
+      detail={itemDetail(showDetail, selected, m, deviceId(d), () => deviceMarkdown(m, d))}
       actions={
         <ActionPanel>
           {reportAction("dev=" + encodeURIComponent(d.name))}
@@ -306,5 +334,70 @@ export function DeviceItem({
         </ActionPanel>
       }
     />
+  );
+}
+
+/* ---------- Gerätefilter (Gruppe / Tag) ---------- */
+
+export const ALL_DEVICES = "__alle__";
+
+/**
+ * Gerätefilter für Suche und Top-Maßnahmen. Startet mit „alle außer private Geräte“
+ * (Einstellung „Private Geräte“ bzw. automatisch erkannt); jede andere Auswahl gilt bis zum Schließen.
+ */
+export function useDeviceFilter(raw?: RawReport) {
+  const [chosen, setChosen] = useState<string | null>(null);
+  const start = useMemo(() => (raw ? privateFilter(raw.devices) || ALL_DEVICES : ALL_DEVICES), [raw]);
+  const value = chosen ?? start;
+  return { value, filter: value === ALL_DEVICES ? undefined : value, setValue: setChosen };
+}
+
+/** "#privat" → "Tag privat", "!#privat" → "außer Tag privat", "!Gruppe" → "außer Gruppe" */
+export function filterLabel(filter: string): string {
+  if (filter.startsWith("#")) return `Tag ${filter.slice(1)}`;
+  if (filter.startsWith("!#")) return `außer Tag ${filter.slice(2)}`;
+  if (filter.startsWith("!")) return `außer ${filter.slice(1)}`;
+  return filter;
+}
+
+export function DeviceFilterDropdown({
+  raw,
+  value,
+  onChange,
+}: {
+  raw: RawReport;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const groups = groupNames(raw),
+    tags = tagNames(raw);
+  return (
+    <List.Dropdown tooltip="Geräte" value={value} onChange={onChange}>
+      <List.Dropdown.Item title="Alle Geräte" value={ALL_DEVICES} />
+      <List.Dropdown.Section title="Gruppe">
+        {groups.map((g) => (
+          <List.Dropdown.Item key={g} title={g} value={g} />
+        ))}
+      </List.Dropdown.Section>
+      <List.Dropdown.Section title="Alle außer Gruppe">
+        {groups.map((g) => (
+          <List.Dropdown.Item key={`!${g}`} title={`außer ${g}`} value={`!${g}`} />
+        ))}
+      </List.Dropdown.Section>
+      {tags.length > 0 && (
+        <List.Dropdown.Section title="Tag">
+          {tags.map((t) => (
+            <List.Dropdown.Item key={`#${t}`} title={`Tag ${t}`} value={`#${t}`} />
+          ))}
+        </List.Dropdown.Section>
+      )}
+      {tags.length > 0 && (
+        <List.Dropdown.Section title="Alle außer Tag">
+          {tags.map((t) => (
+            <List.Dropdown.Item key={`!#${t}`} title={`außer Tag ${t}`} value={`!#${t}`} />
+          ))}
+        </List.Dropdown.Section>
+      )}
+    </List.Dropdown>
   );
 }

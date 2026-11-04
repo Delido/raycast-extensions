@@ -254,6 +254,8 @@ const GROUPS = [
   { g: "Clients Verwaltung", p: "PC-VW", n: 70, server: false },
   { g: "Server Produktion", p: "SRV-PRD", n: 28, server: true },
   { g: "Server Test", p: "SRV-TST", n: 14, server: true },
+  // zeigt die Einstellung „Private Geräte“: in Report und Listen zunächst ausgeblendet
+  { g: "Private Geräte", p: "PRIV", n: 12, server: false },
 ];
 const SEVS = ["Low", "Medium", "High", "Critical"];
 const titleCase = (s: string) => s.replace(/[_-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());

@@ -29,50 +29,82 @@ export async function getToken(creds: Credentials): Promise<string> {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Liefert das aktuelle Token; mit refresh=true wird neu angemeldet (Token läuft nach ca. 60–90 min ab). */
+export type TokenSource = (refresh?: boolean) => Promise<string>;
+
+export function tokenSource(creds: Credentials, first: string): TokenSource {
+  let token = first;
+  return async (refresh = false) => (refresh ? (token = await getToken(creds)) : token);
+}
+
+const RETRIES = 5;
+
 /**
  * Holt alle Seiten eines Endpunkts und reicht jede Seite an onPage weiter, damit große Exporte
- * nicht komplett im Speicher liegen. Bei optional=true wird ein Fehler nur protokolliert (Rückgabe false).
+ * nicht komplett im Speicher liegen. 429/5xx und Netzwerkfehler werden wiederholt, bei 401 wird
+ * einmal neu angemeldet. Bei optional=true wird ein Fehler nur protokolliert (Rückgabe false).
  */
 export async function fetchPages(
   base: string,
   path: string,
-  token: string,
+  auth: TokenSource,
   onPage: (items: unknown[]) => void,
   log: Log,
   optional = false,
 ): Promise<boolean> {
   let url: string | undefined = base.replace(/\/$/, "") + path;
   let total = 0;
-  while (url) {
-    let res: Response | undefined;
-    for (let attempt = 1; ; attempt++) {
-      res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(300_000) });
-      if ((res.status === 429 || res.status >= 500) && attempt <= 5) {
-        const wait = Number(res.headers.get("retry-after")) || 30 * attempt;
-        log(`  API meldet ${res.status}, warte ${wait} s (Versuch ${attempt}/5) …`);
-        await sleep(wait * 1000);
-        continue;
+  try {
+    while (url) {
+      let res: Response | undefined;
+      let refreshed = false;
+      for (let attempt = 1; ; attempt++) {
+        try {
+          res = await fetch(url, {
+            headers: { Authorization: `Bearer ${await auth()}` },
+            signal: AbortSignal.timeout(300_000),
+          });
+        } catch (error) {
+          if (attempt > RETRIES) throw error;
+          const wait = 30 * attempt;
+          log(`  Netzwerkfehler (${(error as Error).message}), warte ${wait} s (Versuch ${attempt}/${RETRIES}) …`);
+          await sleep(wait * 1000);
+          continue;
+        }
+        if (res.status === 401 && !refreshed) {
+          refreshed = true;
+          log("  Token abgelaufen, melde neu an …");
+          await auth(true);
+          attempt--;
+          continue;
+        }
+        if ((res.status === 429 || res.status >= 500) && attempt <= RETRIES) {
+          const wait = Number(res.headers.get("retry-after")) || 30 * attempt;
+          log(`  API meldet ${res.status}, warte ${wait} s (Versuch ${attempt}/${RETRIES}) …`);
+          await sleep(wait * 1000);
+          continue;
+        }
+        break;
       }
-      break;
+      const json = (await res.json().catch(() => ({}))) as {
+        value?: unknown[];
+        "@odata.nextLink"?: string;
+        error?: { message?: string };
+      };
+      if (!res.ok) throw new Error(`${res.status}: ${json.error?.message || res.statusText}`);
+      const items = json.value || [];
+      total += items.length;
+      onPage(items);
+      url = json["@odata.nextLink"];
+      if (url) log(`  … ${total.toLocaleString("de-DE")} Einträge`);
     }
-    const json = (await res.json().catch(() => ({}))) as {
-      value?: unknown[];
-      "@odata.nextLink"?: string;
-      error?: { message?: string };
-    };
-    if (!res.ok) {
-      const msg = `${res.status}: ${json.error?.message || res.statusText}`;
-      if (optional) {
-        log(`  ⚠ übersprungen (${msg})`);
-        return false;
-      }
-      throw new Error(`API-Fehler bei ${path.split("?")[0]} – ${msg}`);
+  } catch (error) {
+    const msg = (error as Error).message;
+    if (optional) {
+      log(`  ⚠ übersprungen (${msg})`);
+      return false;
     }
-    const items = json.value || [];
-    total += items.length;
-    onPage(items);
-    url = json["@odata.nextLink"];
-    if (url) log(`  … ${total.toLocaleString("de-DE")} Einträge`);
+    throw new Error(`API-Fehler bei ${path.split("?")[0]} – ${msg}`);
   }
   log(`  ${total.toLocaleString("de-DE")} Einträge`);
   return true;

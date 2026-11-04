@@ -59,6 +59,40 @@
       "required": false
     },
     {
+      "name": "privateDevices",
+      "title": "Private Geräte",
+      "description": "Gruppe oder #Tag der privaten Geräte. Sie sind in Report, Suche und Top-Maßnahmen zunächst ausgeblendet und lassen sich über den Filter einblenden. Leer = Gruppe bzw. Tag mit „privat“, „private“ oder „BYOD“ im Namen.",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "z. B. Private Geräte oder #privat"
+    },
+    {
+      "name": "keepReports",
+      "title": "Ältere Reports",
+      "description": "Wie viele datierte Reports (Defender-Schwachstellen_….html) im Report-Ordner bleiben. Ältere werden nach jedem Lauf gelöscht.",
+      "type": "dropdown",
+      "required": false,
+      "default": "30",
+      "data": [
+        {
+          "title": "10 behalten",
+          "value": "10"
+        },
+        {
+          "title": "30 behalten",
+          "value": "30"
+        },
+        {
+          "title": "90 behalten",
+          "value": "90"
+        },
+        {
+          "title": "Alle behalten",
+          "value": "0"
+        }
+      ]
+    },
+    {
       "name": "demoMode",
       "title": "Demodaten",
       "label": "Report mit Demodaten erzeugen (ohne Defender-Zugang)",

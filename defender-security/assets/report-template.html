@@ -388,7 +388,9 @@ const newTag = f => isNew(f) ? `<span class="newtag">NEU</span>` : "";
 
 /* ---------- Filter ---------- */
 const FILTER_DEFAULT = { group: "", tag: "", os: "", sev: "", exp: "", age: "", q: "" };
-const state = Object.assign({ tab: "overview" }, FILTER_DEFAULT);
+// Startansicht: private Geräte ausgeblendet (Einstellung „Private Geräte“ der Extension), über den Filter einblendbar
+const FILTER_START = Object.assign({}, FILTER_DEFAULT, D.meta.defaultFilter || {});
+const state = Object.assign({ tab: "overview" }, FILTER_START);
 const uniq = arr => [...new Set(arr)].sort((a, b) => a.localeCompare(b, "de"));
 function fillSelect(id, values, allLabel, exclude) {
   // "!wert" = alles außer diesem Wert, z. B. "Alle Gruppen außer Private Geräte"
@@ -426,6 +428,11 @@ try {
     if (saved[k] && [...el.options].some(o => o.value === saved[k])) state[k] = saved[k];
   }
 } catch (_) {}
+// Startfilter, der im Auswahlfeld nicht (mehr) vorkommt, nicht stehen lassen
+for (const k of STORED_FILTERS) {
+  const el = document.getElementById(FILTER_IDS[k]);
+  if (state[k] && ![...el.options].some(o => o.value === state[k])) state[k] = "";
+}
 for (const k of ["group", "tag", "os", "sev", "exp", "age"]) {
   document.getElementById(FILTER_IDS[k]).addEventListener("change", e => { state[k] = e.target.value; syncControls(); saveFilters(); update(); });
 }
@@ -434,7 +441,7 @@ document.getElementById("f-q").addEventListener("input", e => {
   clearTimeout(qTimer);
   qTimer = setTimeout(() => { state.q = e.target.value.trim(); update(); }, 200);
 });
-document.getElementById("f-reset").addEventListener("click", () => { Object.assign(state, FILTER_DEFAULT); syncControls(); saveFilters(); update(); });
+document.getElementById("f-reset").addEventListener("click", () => { Object.assign(state, FILTER_START); syncControls(); saveFilters(); update(); });
 function setFilters(patch, tab) {
   Object.assign(state, patch);
   syncControls();

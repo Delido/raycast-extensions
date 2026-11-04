@@ -342,7 +342,9 @@ export class ChangeSummary {
   private days = new Map<string, { d: string; n: number[]; x: number[] }>();
   add(ch: Row) {
     if (ch.status !== "New" && ch.status !== "Fixed") return;
-    const day = new Date(ch.eventTimestamp).toISOString().slice(0, 10);
+    const time = Date.parse(ch.eventTimestamp);
+    if (Number.isNaN(time)) return; // ein kaputter Zeitstempel soll nicht den ganzen Lauf abbrechen
+    const day = new Date(time).toISOString().slice(0, 10);
     let e = this.days.get(day);
     if (!e) {
       e = { d: day, n: [0, 0, 0, 0], x: [0, 0, 0, 0] };

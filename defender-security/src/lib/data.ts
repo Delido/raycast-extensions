@@ -9,6 +9,10 @@ import path from "path";
 export interface Preferences {
   reportFolder?: string;
   demoMode?: boolean;
+  /** Anzahl datierter Reports, die behalten werden ("0" = alle) */
+  keepReports?: string;
+  /** Gruppe oder "#Tag" der privaten Geräte; leer = automatisch erkennen */
+  privateDevices?: string;
 }
 
 interface RawDevice {
@@ -173,10 +177,6 @@ export async function loadRaw(): Promise<RawReport> {
   return raw;
 }
 
-export async function loadModel(groupFilter?: string): Promise<Model> {
-  return buildModel(await loadRaw(), groupFilter);
-}
-
 export const tagNames = (raw: RawReport) =>
   [...new Set(raw.devices.flatMap((d) => d.t ?? []))].sort((a, b) => a.localeCompare(b, "de"));
 
@@ -192,6 +192,34 @@ export function deviceFilter(filter?: string): (d: { g: string; t?: string[] }) 
     ? (d: { t?: string[] }) => (d.t ?? []).includes(rest.slice(1))
     : (d: { g: string }) => d.g === rest;
   return not ? (d) => !hit(d) : hit;
+}
+
+const PRIVATE = /privat|private|byod/i;
+
+/**
+ * Standardfilter "alle außer private Geräte" im Format von deviceFilter ("!Gruppe" bzw. "!#Tag"),
+ * "" wenn es keine privaten Geräte gibt. Quelle: Einstellung „Private Geräte“, sonst eine Gruppe
+ * bzw. ein Tag mit „privat“, „private“ oder „BYOD“ im Namen.
+ */
+export function privateFilter(devices: { g: string; t?: string[] }[]): string {
+  const setting = (prefs().privateDevices ?? "").trim();
+  const groups = new Set(devices.map((d) => d.g));
+  const tags = new Set(devices.flatMap((d) => d.t ?? []));
+  if (setting) {
+    if (setting.startsWith("#")) return tags.has(setting.slice(1)) ? `!${setting}` : "";
+    return groups.has(setting) ? `!${setting}` : tags.has(setting) ? `!#${setting}` : "";
+  }
+  const group = [...groups].sort().find((g) => PRIVATE.test(g));
+  if (group) return `!${group}`;
+  const tag = [...tags].sort().find((x) => PRIVATE.test(x));
+  return tag ? `!#${tag}` : "";
+}
+
+/** Derselbe Standardfilter für den HTML-Report: { group: "!X" } bzw. { tag: "!X" } */
+export function reportDefaultFilter(devices: { g: string; t?: string[] }[]): { group?: string; tag?: string } {
+  const f = privateFilter(devices);
+  if (!f) return {};
+  return f.startsWith("!#") ? { tag: `!${f.slice(2)}` } : { group: f };
 }
 
 export const groupNames = (raw: RawReport) =>
@@ -331,8 +359,11 @@ export function buildModel(raw: RawReport, groupFilter?: string): Model {
   }
   for (const b of cve.values()) b.score = b.devCount * W_SEV[b.s] * W_EXP[b.e];
 
-  // Fundstellen: Schlüssel als Zahl (Gerät, Software, Version) statt als Zeichenkette
-  const evKey = (d: number, s: number, v: number) => (d * 0x10000 + s) * 0x10000 + v;
+  // Fundstellen: Schlüssel als Zahl (Gerät, Software, Version) statt als Zeichenkette – gemischte Basis
+  // aus den Listenlängen, damit nichts kollidiert (feste 16 Bit liefen ab 65.536 Versionen über)
+  const nSw = Math.max(1, raw.sw.length),
+    nVer = Math.max(1, raw.vers.length);
+  const evKey = (d: number, s: number, v: number) => (d * nSw + s) * nVer + v;
   const evMap = new Map<number, number[]>();
   for (const [d, s, v, ps] of raw.ev || []) evMap.set(evKey(d, s, v), ps);
 

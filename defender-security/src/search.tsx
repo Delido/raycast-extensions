@@ -1,13 +1,26 @@
 import { Action, ActionPanel, Icon, LaunchType, List, launchCommand } from "@raycast/api";
 import { usePromise } from "@raycast/utils";
 import { useMemo, useState } from "react";
-import { dateTime, fmt, loadModel } from "./lib/data";
-import { CveItem, DeviceItem, SoftwareItem } from "./lib/views";
+import { buildModel, dateTime, fmt, loadRaw } from "./lib/data";
+import {
+  CveItem,
+  cveId,
+  DeviceFilterDropdown,
+  DeviceItem,
+  deviceId,
+  filterLabel,
+  SoftwareItem,
+  softwareId,
+  useDeviceFilter,
+} from "./lib/views";
 
 export default function Command() {
-  const { data: m, isLoading, error } = usePromise(loadModel, []);
+  const { data: raw, isLoading, error } = usePromise(loadRaw, []);
+  const { value, filter, setValue } = useDeviceFilter(raw);
+  const m = useMemo(() => (raw ? buildModel(raw, filter) : undefined), [raw, filter]);
   const [query, setQuery] = useState("");
   const [showDetail, setShowDetail] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const toggle = () => setShowDetail((x) => !x);
 
   // Eigene Filterung: bei leerer Suche die wichtigsten Einträge, sonst Treffer inkl. Pfadsuche
@@ -32,6 +45,13 @@ export default function Command() {
     };
   }, [m, query]);
 
+  // until Raycast reports a selection, the first row is the selected one
+  const firstId = res
+    ? (res.sw[0] && softwareId(res.sw[0])) ||
+      (res.cves[0] && cveId(res.cves[0])) ||
+      (res.devs[0] && deviceId(res.devs[0]))
+    : undefined;
+  const isSelected = (id: string) => (selectedId ?? firstId) === id;
   const count = (shown: number, total: number) => (shown < total ? `${fmt(shown)} von ${fmt(total)}` : fmt(total));
 
   return (
@@ -39,6 +59,8 @@ export default function Command() {
       isLoading={isLoading}
       filtering={false}
       onSearchTextChange={setQuery}
+      onSelectionChange={setSelectedId}
+      searchBarAccessory={raw ? <DeviceFilterDropdown raw={raw} value={value} onChange={setValue} /> : null}
       throttle
       isShowingDetail={showDetail && !!res && res.sw.length + res.cves.length + res.devs.length > 0}
       searchBarPlaceholder={
@@ -67,15 +89,33 @@ export default function Command() {
         <>
           <List.Section
             title={res.q ? "Software" : "Wichtigste Maßnahmen"}
-            subtitle={res.q ? count(res.sw.length, res.total.sw) : `Stand ${dateTime(m.generated)}`}
+            subtitle={
+              res.q
+                ? count(res.sw.length, res.total.sw)
+                : `Stand ${dateTime(m.generated)}${filter ? " · " + filterLabel(filter) : ""}`
+            }
           >
             {res.sw.map((a) => (
-              <SoftwareItem key={a.i} m={m} a={a} showDetail={showDetail} toggleDetail={toggle} />
+              <SoftwareItem
+                key={a.i}
+                m={m}
+                a={a}
+                showDetail={showDetail}
+                selected={isSelected(softwareId(a))}
+                toggleDetail={toggle}
+              />
             ))}
           </List.Section>
           <List.Section title={res.q ? "CVEs" : "Wichtigste CVEs"} subtitle={count(res.cves.length, res.total.cves)}>
             {res.cves.map((b) => (
-              <CveItem key={b.i} m={m} b={b} showDetail={showDetail} toggleDetail={toggle} />
+              <CveItem
+                key={b.i}
+                m={m}
+                b={b}
+                showDetail={showDetail}
+                selected={isSelected(cveId(b))}
+                toggleDetail={toggle}
+              />
             ))}
           </List.Section>
           <List.Section
@@ -83,7 +123,14 @@ export default function Command() {
             subtitle={count(res.devs.length, res.total.devs)}
           >
             {res.devs.map((d) => (
-              <DeviceItem key={d.i} m={m} d={d} showDetail={showDetail} toggleDetail={toggle} />
+              <DeviceItem
+                key={d.i}
+                m={m}
+                d={d}
+                showDetail={showDetail}
+                selected={isSelected(deviceId(d))}
+                toggleDetail={toggle}
+              />
             ))}
           </List.Section>
           <List.EmptyView

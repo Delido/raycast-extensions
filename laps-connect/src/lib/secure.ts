@@ -89,6 +89,8 @@ public static class Cred {
 /** Starts a Remote Desktop session with temporarily stored credentials (Windows only). */
 export async function startRdp(address: string, user: string, secret: string) {
   if (process.platform !== "win32") throw new Error("RDP with stored credentials is only supported on Windows");
+  // the address ends up in "mstsc /v:…" – only plain host[:port] characters
+  if (!/^[\w.-]+(:\d+)?$/.test(address)) throw new Error(`Unsupported RDP address "${address}"`);
   const host = address.replace(/:\d+$/, "");
   await runPowerShell(RDP_SCRIPT, JSON.stringify({ address, host, user, secret }));
 }

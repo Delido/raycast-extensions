@@ -75,11 +75,15 @@ export interface LapsCredential {
 export async function getLapsPassword(deviceName: string): Promise<LapsCredential> {
   await getSecret(); // throws while LAPS Connect is locked
   const name = deviceName.replace(/'/g, "''");
-  const list = await graph<{ value: { id: string; deviceName: string }[] }>(
+  const list = await graph<{ value: { id: string; deviceName: string; lastBackupDateTime?: string }[] }>(
     `directory/deviceLocalCredentials?$filter=${encodeURIComponent(`deviceName eq '${name}'`)}`,
   );
-  const entry = list.value.find((d) => d.deviceName.toLowerCase() === deviceName.toLowerCase()) ?? list.value[0];
-  if (!entry) throw new Error(`No LAPS password stored for ${deviceName}`);
+  // Only an exact name match, never "some" device. Several entries with the same name (device was
+  // reinstalled / re-joined): the one with the most recent backup is the current one.
+  const entry = list.value
+    .filter((d) => d.deviceName.toLowerCase() === deviceName.toLowerCase())
+    .sort((a, b) => (b.lastBackupDateTime ?? "").localeCompare(a.lastBackupDateTime ?? ""))[0];
+  if (!entry) throw new Error(`No LAPS password stored for a device named ${deviceName}`);
 
   const detail = await graph<{
     deviceName: string;

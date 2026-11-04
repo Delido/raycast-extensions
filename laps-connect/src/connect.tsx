@@ -19,6 +19,7 @@ import { getLapsPassword, LapsCredential, signOut } from "./lib/graph";
 import { copySecret, startRdp } from "./lib/secure";
 import { freePort, openInTerminal, safeArg, waitForPort } from "./lib/terminal";
 import { ChangePasswordForm, Gate, ReplaceUnifiKeyForm } from "./lib/gate";
+import { computerName } from "./lib/names";
 import { getWireGuardUsers, WireGuardUser } from "./lib/unifi";
 import { lock } from "./lib/vault";
 
@@ -33,7 +34,7 @@ function prefs() {
   return { ...p, filter, suffix: p.deviceSuffix?.trim() ?? "-LAP", jump: p.jumpHost?.trim() || undefined };
 }
 
-const deviceName = (user: WireGuardUser) => `${user.name}${prefs().suffix}`.toUpperCase();
+const deviceName = (user: WireGuardUser) => computerName(user.name, prefs().suffix);
 const jumpArgs = () => (prefs().jump ? ["-J", safeArg(prefs().jump!)] : []);
 
 async function withLaps(user: WireGuardUser, use: (cred: LapsCredential) => Promise<void>) {

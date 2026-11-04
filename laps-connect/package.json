@@ -24,8 +24,9 @@
     {
       "name": "lock",
       "title": "Lock LAPS Connect",
-      "description": "Lock LAPS Connect now",
-      "mode": "no-view"
+      "description": "Lock LAPS Connect now. In the background it ends expired sessions every minute.",
+      "mode": "no-view",
+      "interval": "1m"
     }
   ],
   "preferences": [
@@ -120,7 +121,7 @@
     {
       "name": "deviceSuffix",
       "title": "Windows Device Suffix",
-      "description": "Computer name = WireGuard name + this suffix",
+      "description": "Computer name = WireGuard name + this suffix, shortened to Windows' 15 characters (m-mustermann → M-MUSTERMAN-LAP)",
       "type": "textfield",
       "required": false,
       "default": "-LAP"

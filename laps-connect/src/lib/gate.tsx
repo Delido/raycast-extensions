@@ -8,19 +8,24 @@ import {
   hasVault,
   isUnlocked,
   lockoutRemaining,
+  MIN_PASSWORD_LENGTH,
   replaceSecret,
   resetVault,
   unlock,
 } from "./vault";
 
-const MIN_PASSWORD = 8;
+/** "Wrong password", or the lockout wait after too many attempts. */
+async function wrongPasswordMessage(): Promise<string> {
+  const wait = await lockoutRemaining();
+  return wait > 0 ? `Too many attempts, try again in ${wait} s` : "Wrong password";
+}
 
 type State = "loading" | "setup" | "locked" | "open";
 type Errors = Record<string, string | undefined>;
 
 function passwordErrors(password: string, confirm: string): Errors {
   return {
-    password: password.length < MIN_PASSWORD ? `At least ${MIN_PASSWORD} characters` : undefined,
+    password: password.length < MIN_PASSWORD_LENGTH ? `At least ${MIN_PASSWORD_LENGTH} characters` : undefined,
     confirm: password !== confirm ? "Passwords don't match" : undefined,
   };
 }
@@ -74,7 +79,7 @@ function SetupForm({ onDone }: { onDone: () => void }) {
       <Form.PasswordField
         id="password"
         title="Password"
-        placeholder={`At least ${MIN_PASSWORD} characters`}
+        placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
         error={errors.password}
         onChange={clear("password")}
       />
@@ -98,8 +103,7 @@ function UnlockForm({ onUnlocked, onReset }: { onUnlocked: () => void; onReset: 
               const wait = await lockoutRemaining();
               if (wait > 0) return setError(`Too many attempts, try again in ${wait} s`);
               if (await unlock(v.password)) return onUnlocked();
-              const after = await lockoutRemaining();
-              setError(after > 0 ? `Too many attempts, try again in ${after} s` : "Wrong password");
+              setError(await wrongPasswordMessage());
             }}
           />
           <Action
@@ -146,7 +150,7 @@ export function ChangePasswordForm() {
               if (await changePassword(v.current, v.password)) {
                 await showToast({ title: "Password changed" });
                 pop();
-              } else setErrors({ current: "Wrong password" });
+              } else setErrors({ current: await wrongPasswordMessage() });
             }}
           />
         </ActionPanel>
@@ -179,7 +183,7 @@ export function ReplaceUnifiKeyForm() {
               if (await replaceSecret(v.password, v.apiKey.trim())) {
                 await showToast({ title: "UniFi API key replaced" });
                 pop();
-              } else setErrors({ password: "Wrong password" });
+              } else setErrors({ password: await wrongPasswordMessage() });
             }}
           />
         </ActionPanel>

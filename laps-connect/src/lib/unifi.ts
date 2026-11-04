@@ -87,12 +87,12 @@ export async function getWireGuardUsers(): Promise<WireGuardUser[]> {
     const list = rows<{ _id: string; name: string; interface_ip: string }>(
       await get(`/proxy/network/v2/api/site/default/wireguard/${net._id}/users?networkId=${net._id}`),
     );
-    if (!list.length && !users.length)
-      throw new Error("UniFi: WireGuard user list is empty or the API changed (v2 wireguard/users)");
     for (const u of list) {
       if (u.name && u.interface_ip) users.push({ id: u._id, name: u.name, ip: u.interface_ip, network: net.name });
     }
   }
+  // checked after all networks: the first one may simply have no users
+  if (!users.length) throw new Error("UniFi: WireGuard user list is empty or the API changed (v2 wireguard/users)");
 
   // Active VPN peers (legacy stat API, one row per connected peer). If it fails, the status stays unknown.
   try {

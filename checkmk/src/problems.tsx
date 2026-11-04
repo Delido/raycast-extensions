@@ -15,9 +15,10 @@ export default function Problems() {
   }, []);
 
   const showHandled = scope === "all";
-  const hosts = (data?.hosts ?? []).filter((h) => h.has_been_checked && (showHandled || !isHandled(h)));
-  // Services on hosts that are down are noise in the unhandled view.
-  const downHosts = new Set(hosts.map((h) => h.name));
+  const checkedHosts = (data?.hosts ?? []).filter((h) => h.has_been_checked);
+  const hosts = checkedHosts.filter((h) => showHandled || !isHandled(h));
+  // Services on hosts that are down are noise in the unhandled view – also when the host is acknowledged.
+  const downHosts = new Set(checkedHosts.map((h) => h.name));
   const services = (data?.services ?? []).filter(
     (s) => s.has_been_checked && (showHandled || (!isHandled(s) && !downHosts.has(s.host_name))),
   );

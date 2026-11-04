@@ -68,23 +68,28 @@ const DOWNTIMES = [
 function HandleActions({
   hostName,
   description,
+  canAcknowledge = true,
   onDone,
 }: {
   hostName: string;
   description?: string;
+  /** only problems can be acknowledged; a downtime can also be planned for an UP host */
+  canAcknowledge?: boolean;
   onDone: () => void;
 }) {
   return (
     <ActionPanel.Section title="Handle">
-      <Action.Push
-        title="Acknowledge Problem"
-        icon={Icon.Checkmark}
-        shortcut={{
-          macOS: { modifiers: ["cmd", "shift"], key: "a" },
-          Windows: { modifiers: ["ctrl", "shift"], key: "a" },
-        }}
-        target={<AcknowledgeForm hostName={hostName} description={description} onDone={onDone} />}
-      />
+      {canAcknowledge && (
+        <Action.Push
+          title="Acknowledge Problem"
+          icon={Icon.Checkmark}
+          shortcut={{
+            macOS: { modifiers: ["cmd", "shift"], key: "a" },
+            Windows: { modifiers: ["ctrl", "shift"], key: "a" },
+          }}
+          target={<AcknowledgeForm hostName={hostName} description={description} onDone={onDone} />}
+        />
+      )}
       <ActionPanel.Submenu title="Schedule Downtime" icon={Icon.Moon} shortcut={primaryShortcut("d")}>
         {DOWNTIMES.map((d) => (
           <Action
@@ -276,7 +281,7 @@ export function HostItem({ host, onChange }: { host: Host; onChange: () => void 
         <ActionPanel>
           <Action.Push title="Show Services" icon={Icon.List} target={<HostServices host={host} />} />
           <Action.OpenInBrowser title="Open in Checkmk" url={url} />
-          <HandleActions hostName={host.name} onDone={onChange} />
+          <HandleActions hostName={host.name} canAcknowledge={host.state !== 0} onDone={onChange} />
           <ActionPanel.Section>
             <Action.CopyToClipboard title="Copy URL" content={url} shortcut={Keyboard.Shortcut.Common.Copy} />
             <Action.CopyToClipboard

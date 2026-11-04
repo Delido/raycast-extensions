@@ -13,6 +13,7 @@ interface Problem {
 const KNOWN_KEY = "known-problems";
 const LAST_CHECK_KEY = "last-check";
 const ERROR_KEY = "last-error";
+const FILTER_ERROR_KEY = "last-filter-error";
 
 const SERVICE_LABELS: Record<number, string> = { 1: "WARN", 2: "CRIT", 3: "UNKNOWN" };
 const SERVICE_SEVERITY: Record<number, number> = { 1: 1, 3: 2, 2: 3 };
@@ -24,16 +25,29 @@ const MIN_STATES: Record<string, string[]> = {
   warn: ["1", "2", "3"],
 };
 
+/** A setting is wrong (not a connection problem). */
+class FilterError extends Error {}
+
 function regex(pattern: string | undefined): RegExp | undefined {
   if (!pattern?.trim()) return undefined;
   try {
     return new RegExp(pattern.trim(), "i");
   } catch {
-    throw new Error(`Invalid regular expression: ${pattern}`);
+    throw new FilterError(`Invalid regular expression in the settings: ${pattern}`);
   }
 }
 
-async function collectProblems(prefs: Preferences.Monitor): Promise<Record<string, Problem>> {
+interface Collected {
+  /** problems that are notified */
+  problems: Record<string, Problem>;
+  /**
+   * problems that still exist but are not notified (host down, acknowledged, filtered, pending) –
+   * they must not count as "recovered" when they drop out of the list
+   */
+  suppressed: Set<string>;
+}
+
+async function collectProblems(prefs: Preferences.Monitor): Promise<Collected> {
   const hostRe = regex(prefs.hostFilter);
   const serviceRe = regex(prefs.serviceFilter);
   const excludeRe = regex(prefs.serviceExclude);
@@ -49,14 +63,17 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Record<strin
   ]);
 
   const problems: Record<string, Problem> = {};
-  const downHosts = new Set<string>();
+  const suppressed = new Set<string>();
+  // Services of every host that is down are noise – also when the host itself is acknowledged or filtered.
+  const downHosts = new Set(hosts.filter((h) => h.has_been_checked).map((h) => h.name));
 
   for (const host of hosts) {
-    if (!host.has_been_checked) continue;
-    if (hostRe && !hostRe.test(host.name)) continue;
-    if (prefs.ignoreHandled && isHandled(host)) continue;
-    downHosts.add(host.name);
-    problems[`host:${host.name}`] = {
+    const key = `host:${host.name}`;
+    if (!host.has_been_checked || (hostRe && !hostRe.test(host.name)) || (prefs.ignoreHandled && isHandled(host))) {
+      suppressed.add(key);
+      continue;
+    }
+    problems[key] = {
       label: host.name,
       state: HOST_LABELS[host.state] ?? "DOWN",
       output: host.plugin_output,
@@ -66,13 +83,19 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Record<strin
   }
 
   for (const service of services) {
-    if (!service.has_been_checked) continue;
-    if (hostRe && !hostRe.test(service.host_name)) continue;
-    if (serviceRe && !serviceRe.test(service.description)) continue;
-    if (excludeRe && excludeRe.test(service.description)) continue;
-    if (prefs.ignoreHandled && isHandled(service)) continue;
-    if (downHosts.has(service.host_name)) continue; // already reported via the host
-    problems[`svc:${service.host_name}|${service.description}`] = {
+    const key = `svc:${service.host_name}|${service.description}`;
+    if (
+      !service.has_been_checked ||
+      (hostRe && !hostRe.test(service.host_name)) ||
+      (serviceRe && !serviceRe.test(service.description)) ||
+      (excludeRe && excludeRe.test(service.description)) ||
+      (prefs.ignoreHandled && isHandled(service)) ||
+      downHosts.has(service.host_name) // already reported via the host
+    ) {
+      suppressed.add(key);
+      continue;
+    }
+    problems[key] = {
       label: `${service.host_name} – ${service.description}`,
       state: SERVICE_LABELS[service.state] ?? String(service.state),
       output: service.plugin_output,
@@ -80,7 +103,7 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Record<strin
       severity: SERVICE_SEVERITY[service.state] ?? 0,
     };
   }
-  return problems;
+  return { problems, suppressed };
 }
 
 async function readJson<T>(key: string): Promise<T | undefined> {
@@ -105,16 +128,26 @@ export default async function Monitor() {
   await LocalStorage.setItem(LAST_CHECK_KEY, String(Date.now()));
 
   let current: Record<string, Problem>;
+  let suppressed: Set<string>;
   try {
-    current = await collectProblems(prefs);
+    ({ problems: current, suppressed } = await collectProblems(prefs));
   } catch (error) {
     const message = (error as Error).message;
+    if (error instanceof FilterError) {
+      if (manual) await showHUD(message);
+      else if ((await LocalStorage.getItem<string>(FILTER_ERROR_KEY)) !== message) {
+        await LocalStorage.setItem(FILTER_ERROR_KEY, message);
+        await notify("Checkmk monitor: check the settings", message, { style });
+      }
+      return;
+    }
     const previousError = await LocalStorage.getItem<string>(ERROR_KEY);
     await LocalStorage.setItem(ERROR_KEY, message);
     if (manual) await showHUD(`Checkmk not reachable: ${message}`);
     else if (!previousError) await notify("Checkmk not reachable", message, { style });
     return;
   }
+  await LocalStorage.removeItem(FILTER_ERROR_KEY);
   if (await LocalStorage.getItem(ERROR_KEY)) {
     await LocalStorage.removeItem(ERROR_KEY);
     if (!manual) await notify("Checkmk reachable again", "Monitoring resumed", { style });
@@ -138,8 +171,9 @@ export default async function Monitor() {
     .filter(([key, problem]) => !known[key] || problem.severity > known[key].severity)
     .map(([, problem]) => problem)
     .sort((a, b) => b.severity - a.severity);
+  // gone from the list AND not just hidden (host down, acknowledged, filtered) = really OK again
   const recovered = Object.entries(known)
-    .filter(([key]) => !current[key])
+    .filter(([key]) => !current[key] && !suppressed.has(key))
     .map(([, problem]) => problem);
 
   if (fresh.length > 0 && fresh.length <= 3) {

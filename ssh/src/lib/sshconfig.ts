@@ -33,7 +33,13 @@ export interface HostEntry {
   origin: string;
   file: string;
   line: number;
+  /** first value per option (lower-case key) – what ssh uses for single-value options */
   options: Record<string, string>;
+  /**
+   * every option line as written, in order (LocalForward, IdentityFile, SetEnv … may repeat);
+   * used when the block is written back so nothing gets lost
+   */
+  rawOptions: { key: string; name: string; value: string }[];
 }
 
 /**
@@ -82,7 +88,8 @@ export function parseConfig(text: string, origin: string, file: string): HostEnt
     const match = line.match(/^(\S+?)\s*(?:=\s*|\s+)(.*)$/);
     if (!match) return;
     const key = match[1].toLowerCase();
-    const value = match[2].trim().replace(/^"(.*)"$/, "$1");
+    const rawValue = match[2].trim();
+    const value = rawValue.replace(/^"(.*)"$/, "$1");
 
     if (key === "host") {
       current = value
@@ -99,6 +106,7 @@ export function parseConfig(text: string, origin: string, file: string): HostEnt
           file,
           line: index + 1,
           options: {},
+          rawOptions: [],
         }));
       entries.push(...current);
       pending = { tags: [] };
@@ -109,6 +117,7 @@ export function parseConfig(text: string, origin: string, file: string): HostEnt
       return;
     }
     for (const entry of current) {
+      entry.rawOptions.push({ key, name: match[1], value: rawValue });
       if (entry.options[key] !== undefined) continue; // first value wins, like ssh
       entry.options[key] = value;
       if (key === "hostname") entry.hostName = value;
@@ -206,20 +215,47 @@ export async function integrate(): Promise<string> {
   return CONFIG_PATH;
 }
 
+// Options that execute commands or load code.
 const RISKY =
   /^\s*(ProxyCommand|LocalCommand|PermitLocalCommand|KnownHostsCommand|Include|IdentityAgent|PKCS11Provider|SecurityKeyProvider)\b/i;
+// Options that weaken host key checking or hand out your agent – team files come before your own
+// "Host *" in ~/.ssh/config, so they would override your defaults.
+const WEAKENING =
+  /^\s*(ForwardAgent|UserKnownHostsFile|GlobalKnownHostsFile)\b|^\s*StrictHostKeyChecking\s*(=\s*|\s+)"?(no|off|accept-new)\b/i;
 const RISKY_MATCH = /^\s*Match\b.*\bexec\b/i;
+const BLOCK_LINE = /^\s*(Host|Match)\b/i;
+/** "Host *" (or "Host * !x"): a catch-all that would apply to all your hosts. "Host *.acme.local" is fine. */
+const CATCH_ALL = /^\s*Host\s*(=\s*|\s+)(.*)$/i;
 
-/** Comments out options that execute commands or load code; returns the cleaned text and the number of hits. */
+function isCatchAll(line: string): boolean {
+  const m = line.match(CATCH_ALL);
+  if (!m) return false;
+  const patterns = m[2].trim().split(/\s+/);
+  return patterns.some((p) => p === "*") && patterns.every((p) => p === "*" || p.startsWith("!"));
+}
+
+/**
+ * Comments out options that execute commands, load code or weaken host key checking, and whole
+ * catch-all "Host *" blocks; returns the cleaned text and the number of blocked lines.
+ */
 export function sanitize(text: string): { text: string; blocked: number } {
   let blocked = 0;
+  // Inside a blocked block header, its options are blocked too – otherwise they would silently
+  // become part of the previous Host block.
+  let inBlockedBlock = false;
+  const block = (line: string) => {
+    blocked++;
+    return `# [blocked by Raycast SSH] ${line.trim()}`;
+  };
   const cleaned = text
     .split(/\r?\n/)
     .map((line) => {
-      if (RISKY.test(line) || RISKY_MATCH.test(line)) {
-        blocked++;
-        return `# [blocked by Raycast SSH] ${line.trim()}`;
+      if (BLOCK_LINE.test(line)) {
+        inBlockedBlock = isCatchAll(line) || RISKY_MATCH.test(line);
+        return inBlockedBlock ? block(line) : line;
       }
+      if (inBlockedBlock && line.trim() && !line.trim().startsWith("#")) return block(line);
+      if (RISKY.test(line) || WEAKENING.test(line)) return block(line);
       return line;
     })
     .join("\n");

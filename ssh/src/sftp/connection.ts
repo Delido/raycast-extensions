@@ -60,17 +60,23 @@ function connectHop(hop: ResolvedHost, ui: ConnectUI, sock?: ClientChannel): Pro
     keys.forEach(() => plan.push("publickey"));
     plan.push("keyboard-interactive", "password");
     let keyIndex = 0;
+    let retries = 0;
 
-    const getSecret = async (prompt: string) => {
-      if (secret !== undefined) return secret;
+    const ask = async (prompt: string) => {
       const value = await ui.askSecret(hop, prompt);
       if (value === undefined) {
         cancelled = true;
         throw new CancelledError();
       }
-      secret = value;
       return value;
     };
+    // The password is asked once and reused for keyboard-interactive and password auth.
+    // Other prompts (verification code, OTP) are asked every time.
+    const getPassword = async (prompt: string) => {
+      if (secret === undefined) secret = await ask(retries ? `${prompt} (wrong, try again)` : prompt);
+      return secret;
+    };
+    const isPasswordPrompt = (prompt: string) => /pass(word|wort|phrase|code)?|kennwort/i.test(prompt);
 
     client.on("ready", () => resolve(client));
     client.on("error", (err) => {
@@ -111,7 +117,14 @@ function connectHop(hop: ResolvedHost, ui: ConnectUI, sock?: ClientChannel): Pro
       authHandler: (methodsLeft, _partial, next) => {
         const allowed = (m: string) => !methodsLeft || methodsLeft.includes(m as AuthenticationType);
         const step = (): void => {
-          const method = plan.shift();
+          let method = plan.shift();
+          if (!method && secret !== undefined && retries < 2) {
+            // the password was wrong: ask again (OpenSSH allows 3 attempts too)
+            retries++;
+            secret = undefined;
+            plan.push("keyboard-interactive", "password");
+            method = plan.shift();
+          }
           if (!method) return next(false as never);
           if (method === "agent" && allowed("publickey"))
             return next({ type: "agent", username: hop.user, agent: agent! });
@@ -125,14 +138,22 @@ function connectHop(hop: ResolvedHost, ui: ConnectUI, sock?: ClientChannel): Pro
               username: hop.user,
               prompt: (_name, instructions, _lang, prompts, finish) => {
                 if (!prompts.length) return finish([]);
-                Promise.all(prompts.map((p) => getSecret(p.prompt || instructions || "Password")))
+                // one after the other: "Password" and then "Verification code" are two different answers
+                (async () => {
+                  const answers: string[] = [];
+                  for (const p of prompts) {
+                    const text = (p.prompt || instructions || "Password").trim();
+                    answers.push(isPasswordPrompt(text) ? await getPassword(text) : await ask(text));
+                  }
+                  return answers;
+                })()
                   .then(finish)
                   .catch(() => client.end());
               },
             });
           }
           if (method === "password" && allowed("password")) {
-            getSecret("Password")
+            getPassword("Password")
               .then((password) => next({ type: "password", username: hop.user, password }))
               .catch(() => client.end());
             return;

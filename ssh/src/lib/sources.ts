@@ -33,7 +33,12 @@ export interface SourceState {
   hosts?: number;
   blocked?: number;
   error?: string;
+  /** version of the blocking rules the cache was cleaned with */
+  rules?: number;
 }
+
+/** Raise when sanitize() blocks more: every cache is downloaded and cleaned again on the next sync. */
+const RULES_VERSION = 2;
 
 const SOURCES_KEY = "sources";
 const STATE_KEY = "source-state";
@@ -52,10 +57,22 @@ export async function getStates(): Promise<Record<string, SourceState>> {
   return raw ? (JSON.parse(raw) as Record<string, SourceState>) : {};
 }
 
-async function setState(id: string, state: SourceState) {
-  const states = await getStates();
-  states[id] = state;
-  await LocalStorage.setItem(STATE_KEY, JSON.stringify(states));
+// Read-modify-write of the whole state object: parallel syncs (syncAll) must not overwrite each other.
+let stateQueue: Promise<unknown> = Promise.resolve();
+function updateStates(change: (states: Record<string, SourceState>) => void): Promise<void> {
+  const run = stateQueue.then(async () => {
+    const states = await getStates();
+    change(states);
+    await LocalStorage.setItem(STATE_KEY, JSON.stringify(states));
+  });
+  stateQueue = run.catch(() => undefined);
+  return run;
+}
+
+function setState(id: string, state: SourceState) {
+  return updateStates((states) => {
+    states[id] = state;
+  });
 }
 
 export function newSourceId(name: string): string {
@@ -73,9 +90,9 @@ export function cacheFile(id: string) {
 
 export async function removeSource(id: string) {
   await saveSources((await getSources()).filter((s) => s.id !== id));
-  const states = await getStates();
-  delete states[id];
-  await LocalStorage.setItem(STATE_KEY, JSON.stringify(states));
+  await updateStates((states) => {
+    delete states[id];
+  });
   await fs.rm(cacheFile(id), { force: true });
 }
 
@@ -163,7 +180,15 @@ export async function writeSourceFile(
         ? file
         : path.join(target, file)
       : target;
-    const text = await fs.readFile(full, "utf8").catch(() => "");
+    // Only a missing file counts as empty. Any other read error (share briefly gone, file locked)
+    // must abort – writing transform("") would replace everyone's hosts with this one block.
+    let text = "";
+    try {
+      text = await fs.readFile(full, "utf8");
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    if (text) await fs.copyFile(full, `${full}.raycast-backup-last`).catch(() => undefined);
     await fs.writeFile(full, transform(text));
     return;
   }
@@ -268,7 +293,7 @@ export async function syncSource(source: Source, force = false): Promise<SyncRes
   if (!source.enabled) return { source, status: "disabled", state: previous };
   const now = Date.now();
   try {
-    const known = force ? undefined : previous.version;
+    const known = force || previous.rules !== RULES_VERSION ? undefined : previous.version;
     const result =
       source.type === "onedev"
         ? await onedevFetch(source, known)
@@ -316,6 +341,7 @@ export async function syncSource(source: Source, force = false): Promise<SyncRes
       version: result.version,
       hosts,
       blocked,
+      rules: RULES_VERSION,
     };
     await setState(source.id, state);
     return { source, status: "updated", state };

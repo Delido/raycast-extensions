@@ -26,21 +26,22 @@ export interface HostFields {
 
 const KNOWN = new Set(["hostname", "user", "port", "proxyjump", "identityfile"]);
 
-const OPTION_NAMES: Record<string, string> = {
-  hostname: "HostName",
-  user: "User",
-  port: "Port",
-  proxyjump: "ProxyJump",
-  identityfile: "IdentityFile",
-  forwardagent: "ForwardAgent",
-  localforward: "LocalForward",
-  remoteforward: "RemoteForward",
-  dynamicforward: "DynamicForward",
-  serveraliveinterval: "ServerAliveInterval",
-  sessiontype: "SessionType",
-  requesttty: "RequestTTY",
-  stricthostkeychecking: "StrictHostKeyChecking",
-};
+/**
+ * All option lines except the first of each field shown in its own form field. Repeated options
+ * (several LocalForward, a second IdentityFile …) stay in "extra", so saving keeps them.
+ */
+function extraLines(host?: HostEntry): string {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const { key, name, value } of host?.rawOptions ?? []) {
+    if (KNOWN.has(key) && !seen.has(key)) {
+      seen.add(key);
+      continue;
+    }
+    lines.push(`${name} ${value}`);
+  }
+  return lines.join("\n");
+}
 
 export function fieldsOf(host?: HostEntry): HostFields {
   return {
@@ -54,10 +55,7 @@ export function fieldsOf(host?: HostEntry): HostFields {
     tags: host?.tags.join(", ") ?? "",
     description: host?.description ?? "",
     web: host?.web ?? "",
-    extra: Object.entries(host?.options ?? {})
-      .filter(([k]) => !KNOWN.has(k))
-      .map(([k, v]) => `${OPTION_NAMES[k] ?? k} ${v}`)
-      .join("\n"),
+    extra: extraLines(host),
   };
 }
 
@@ -76,15 +74,19 @@ export function buildBlock(f: HostFields, forTeam: boolean, section?: string): s
   if (f.proxyJump.trim()) lines.push(`    ProxyJump ${f.proxyJump.trim()}`);
   if (f.identityFile.trim() && !forTeam) lines.push(`    IdentityFile "${f.identityFile.trim()}"`);
   for (const line of f.extra.split(/\r?\n/)) {
-    if (line.trim() && !/^\s*(host|match)\b/i.test(line)) lines.push(`    ${line.trim()}`);
+    if (!line.trim() || /^\s*(host|match)\b/i.test(line)) continue;
+    if (forTeam && /^\s*identityfile\b/i.test(line)) continue; // keys stay personal
+    lines.push(`    ${line.trim()}`);
   }
   return lines.join("\n");
 }
 
 const HOST_LINE = /^\s*host\s*(?:=\s*|\s+)(.*)$/i;
 const BLOCK_START = /^\s*(host|match)\b/i;
-const FOLDER = /^\s*#+\s*(?:-{3,}|={3,})/;
+// headings that start a new section: "# --- Kunden ---" and "# section: Kunden"
+const FOLDER = /^\s*#+\s*(?:-{3,}|={3,}|section\s*:)/i;
 const META_ABOVE = /^\s*#+\s*(group|tags|description|desc|web)\s*:/i;
+const COMMENT_OR_BLANK = /^\s*(#.*)?$/;
 
 function patternsOf(line: string): string[] | undefined {
   const m = line.match(HOST_LINE);
@@ -97,8 +99,8 @@ function findBlock(lines: string[], alias: string) {
   if (host < 0) return undefined;
   let end = host + 1;
   while (end < lines.length && !BLOCK_START.test(lines[end]) && !FOLDER.test(lines[end])) end++;
-  // comments and blank lines right before the next block belong to that block
-  while (end > host + 1 && (/^\s*$/.test(lines[end - 1]) || META_ABOVE.test(lines[end - 1]))) end--;
+  // comments and blank lines right before the next block (its metadata, a heading, a note) belong to that block
+  while (end > host + 1 && COMMENT_OR_BLANK.test(lines[end - 1])) end--;
   let start = host;
   while (start > 0 && META_ABOVE.test(lines[start - 1])) start--;
   return { start, host, end, shared: (patternsOf(lines[host]) ?? []).length > 1 };

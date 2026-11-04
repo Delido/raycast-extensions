@@ -17,6 +17,7 @@ import { usePromise } from "@raycast/utils";
 import { useEffect, useState } from "react";
 import { cacheFile, getSources, getStates, syncAll, syncDue } from "./lib/sources";
 import {
+  buildBlock,
   deleteLocal,
   fieldsOf,
   fileOfHost,
@@ -501,30 +502,10 @@ async function connect(open: () => Promise<void>, host: HostEntry, revalidate: (
   }
 }
 
-/** Config block for sharing a host with the team (no keys, no user unless set explicitly). */
+/** Config block for sharing a host with the team – the same block "Save for the team" writes (no keys). */
 function configBlock(host: HostEntry): string {
-  const lines: string[] = [];
-  if (host.group) lines.push(`# group: ${host.group}`);
-  if (host.tags.length) lines.push(`# tags: ${host.tags.join(", ")}`);
-  if (host.description) lines.push(`# description: ${host.description}`);
-  lines.push(`Host ${host.alias}`);
-  for (const [k, v] of Object.entries(host.options)) {
-    if (k === "identityfile") continue; // keys stay local
-    lines.push(`    ${OPTION_NAMES[k] ?? k} ${v}`);
-  }
-  return lines.join("\n");
+  return buildBlock(fieldsOf(host), true);
 }
-
-const OPTION_NAMES: Record<string, string> = {
-  hostname: "HostName",
-  user: "User",
-  port: "Port",
-  proxyjump: "ProxyJump",
-  forwardagent: "ForwardAgent",
-  localforward: "LocalForward",
-  remoteforward: "RemoteForward",
-  serveraliveinterval: "ServerAliveInterval",
-};
 
 function ConnectAsForm({ host, onDone }: { host: HostEntry; onDone: () => void }) {
   const { pop } = useNavigation();
@@ -638,6 +619,17 @@ function HiddenHosts({
   );
 }
 
+/** Values that would produce a broken config line (ssh takes the rest of the line as the value). */
+function fieldError(v: HostFields): string | undefined {
+  if (/\s/.test(v.hostName.trim())) return "Host / IP must not contain spaces";
+  if (/\s/.test(v.user.trim())) return "User must not contain spaces";
+  const port = v.port.trim();
+  if (port && !(/^\d+$/.test(port) && Number(port) >= 1 && Number(port) <= 65535))
+    return "Port must be a number (1–65535)";
+  if (/\s/.test(v.proxyJump.trim())) return "Jump host must not contain spaces (use a,b for several)";
+  return undefined;
+}
+
 /** Add or edit a host – for you only (~/.ssh/config) or for the team (commit / file on the share). */
 function HostForm({ host, onDone }: { host?: HostEntry; onDone: () => void }) {
   const { pop } = useNavigation();
@@ -677,21 +669,28 @@ function HostForm({ host, onDone }: { host?: HostEntry; onDone: () => void }) {
                 });
                 return;
               }
+              const invalid = fieldError(v);
+              if (invalid) {
+                await showToast({ style: Toast.Style.Failure, title: invalid });
+                return;
+              }
               const toast = await showToast({ style: Toast.Style.Animated, title: "Saving…" });
               try {
                 if (v.target === "local") {
                   await saveLocal(host?.alias, v, host?.origin === "local" ? host.section : undefined);
                   toast.title = teamHost ? `${alias} saved for you (overrides the team version)` : `${alias} saved`;
                 } else {
-                  const [, sourceId, file] = v.target.split("|");
+                  const [, sourceId, ...rest] = v.target.split("|");
+                  const file = rest.join("|");
                   const source = (await getSources()).find((s) => s.id === sourceId);
                   if (!source) throw new Error("Source not found");
-                  // only the host's own source knows the old alias; any other source gets it added
+                  // only the host's own file knows the old alias; any other file gets it added
+                  const sameFile = targets?.own ? v.target === targets.own : host?.origin === sourceId;
                   await saveTeam(
                     { source, file },
-                    host?.origin === sourceId ? host.alias : undefined,
+                    sameFile ? host?.alias : undefined,
                     v,
-                    host?.origin === sourceId ? host.section : undefined,
+                    sameFile ? host?.section : undefined,
                   );
                   toast.title = `${alias} saved for the team (${source.name})`;
                   if (host?.origin === "local")

@@ -132,8 +132,8 @@
     {
       "name": "blockRisky",
       "title": "Security",
-      "label": "Disable command-executing options from team sources",
-      "description": "Comments out ProxyCommand, LocalCommand, Match exec, KnownHostsCommand etc. in downloaded files (ProxyJump stays allowed)",
+      "label": "Disable risky options from team sources",
+      "description": "Comments out ProxyCommand, LocalCommand, Match exec, KnownHostsCommand etc., options that weaken host key checking or forward your agent (StrictHostKeyChecking no, UserKnownHostsFile, ForwardAgent) and catch-all \"Host *\" blocks in downloaded files. ProxyJump and patterns like *.example.com stay allowed",
       "type": "checkbox",
       "required": false,
       "default": true

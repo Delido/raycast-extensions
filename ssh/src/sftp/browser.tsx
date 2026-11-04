@@ -34,6 +34,7 @@ import {
   RemoteEntry,
   rename,
   rmdir,
+  uniqueLocalPath,
   upload,
 } from "./ops";
 import { ResolvedHost } from "./resolve";
@@ -369,17 +370,17 @@ function EntryItem({
   );
 }
 
-function uniqueLocalPath(dir: string, name: string): string {
-  let target = path.join(dir, name);
-  const ext = path.extname(name);
-  const base = name.slice(0, name.length - ext.length);
-  for (let i = 1; fs.existsSync(target); i++) target = path.join(dir, `${base} (${i})${ext}`);
-  return target;
-}
-
 async function downloadEntry(sftp: SftpSession["sftp"], entry: RemoteEntry, dir: string) {
-  const target = uniqueLocalPath(dir, entry.name);
   const toast = await showToast({ style: Toast.Style.Animated, title: `Downloading ${entry.name}…` });
+  let target: string;
+  try {
+    target = uniqueLocalPath(dir, entry.name);
+  } catch (e) {
+    toast.style = Toast.Style.Failure;
+    toast.title = "Download refused";
+    toast.message = (e as Error).message;
+    return;
+  }
   try {
     await download(sftp, entry.path, target, (done, total) => {
       toast.message = `${formatSize(done)} / ${formatSize(total)}`;

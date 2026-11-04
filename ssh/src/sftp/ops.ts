@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import type { FileEntry, SFTPWrapper, Stats } from "ssh2";
 
 export interface RemoteEntry {
@@ -111,4 +113,29 @@ export function formatSize(bytes: number): string {
     i++;
   }
   return `${v.toFixed(v < 10 ? 1 : 0)} ${units[i]}`;
+}
+
+/**
+ * A remote file name as a safe local file name. The name comes from the server: on Windows "\" is a
+ * path separator, so "..\..\Startup\x.bat" would otherwise land outside the target folder.
+ */
+export function safeLocalName(name: string): string {
+  const cleaned = name
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\\/:*?"<>|\x00-\x1f]/g, "_")
+    .replace(/^\s+|[\s.]+$/g, "") // Windows drops trailing dots/spaces; ".." becomes empty
+    .slice(0, 200);
+  const reserved = /^(con|prn|aux|nul|com\d|lpt\d)(\..*)?$/i.test(cleaned);
+  return !cleaned || reserved ? `_${cleaned || "download"}` : cleaned;
+}
+
+export function uniqueLocalPath(dir: string, remoteName: string): string {
+  const name = safeLocalName(remoteName);
+  const root = path.resolve(dir);
+  const ext = path.extname(name);
+  const base = name.slice(0, name.length - ext.length);
+  let target = path.join(root, name);
+  for (let i = 1; fs.existsSync(target); i++) target = path.join(root, `${base} (${i})${ext}`);
+  if (path.dirname(path.resolve(target)) !== root) throw new Error(`Unsafe file name from server: ${remoteName}`);
+  return target;
 }

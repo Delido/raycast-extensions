@@ -1,0 +1,137 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "jira-moco",
+  "title": "Jira MOCO Time Tracking",
+  "description": "Track time on Jira issues with several timers and book it as Jira worklog and MOCO activity on the issue's job",
+  "icon": "icon.png",
+  "author": "mendyka",
+  "categories": [
+    "Productivity"
+  ],
+  "license": "MIT",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "commands": [
+    {
+      "name": "track-time",
+      "title": "Track Time",
+      "subtitle": "Jira MOCO",
+      "description": "Find a Jira issue, start, pause and switch timers and book the time to Jira and MOCO",
+      "mode": "view"
+    },
+    {
+      "name": "toggle-timer",
+      "title": "Pause or Resume Timer",
+      "subtitle": "Jira MOCO",
+      "description": "Pauses the running timer or resumes the last one. With background refresh enabled, the subtitle shows the running timer.",
+      "mode": "no-view",
+      "interval": "1m"
+    },
+    {
+      "name": "bookings",
+      "title": "Booked Time",
+      "subtitle": "Jira MOCO",
+      "description": "Bookings made with this extension: retry failed ones, undo, today's total in MOCO",
+      "mode": "view"
+    },
+    {
+      "name": "setup",
+      "title": "Set Up Jira and MOCO",
+      "subtitle": "Jira MOCO",
+      "description": "Connect Jira and MOCO and choose the fields holding job number and order",
+      "mode": "view"
+    }
+  ],
+  "preferences": [
+    {
+      "name": "rounding",
+      "title": "Round Booked Time",
+      "description": "Timer durations are rounded up to this step when booking (you can still edit the duration)",
+      "type": "dropdown",
+      "required": false,
+      "default": "1",
+      "data": [
+        {
+          "title": "To the minute",
+          "value": "1"
+        },
+        {
+          "title": "5 minutes",
+          "value": "5"
+        },
+        {
+          "title": "6 minutes (0.1 h)",
+          "value": "6"
+        },
+        {
+          "title": "10 minutes",
+          "value": "10"
+        },
+        {
+          "title": "15 minutes",
+          "value": "15"
+        },
+        {
+          "title": "30 minutes",
+          "value": "30"
+        }
+      ]
+    },
+    {
+      "name": "singleRunning",
+      "title": "Timers",
+      "label": "Only one timer runs at a time",
+      "description": "Starting or resuming a timer pauses the running one",
+      "type": "checkbox",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "jobPattern",
+      "title": "Job Number Pattern",
+      "description": "Optional regular expression applied to the job field. The first group (or the whole match) is the MOCO project number, e.g. P\\d+ or \\[(\\w+)\\] when the job is part of the summary.",
+      "type": "textfield",
+      "required": false,
+      "placeholder": "P\\d{4,}"
+    },
+    {
+      "name": "orderPattern",
+      "title": "Order Pattern",
+      "description": "Optional regular expression applied to the order field. The first group (or the whole match) is compared with the MOCO task names.",
+      "type": "textfield",
+      "required": false
+    },
+    {
+      "name": "notifyWatchers",
+      "title": "Jira",
+      "label": "Notify watchers about new worklogs",
+      "description": "Jira sends an email to the issue's watchers for every worklog",
+      "type": "checkbox",
+      "required": false,
+      "default": false
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^2.8.2",
+    "@raycast/utils": "^2.3.2"
+  },
+  "scripts": {
+    "build:helper": "node ../scripts/build-go-helper.mjs tray assets/jira-moco-tray.exe --gui --optional",
+    "build": "ray build",
+    "dev": "ray develop",
+    "fix-lint": "ray lint --fix",
+    "lint": "ray lint",
+    "prebuild": "npm run build:helper",
+    "predev": "npm run build:helper"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "^2.2.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.0.10",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3"
+  }
+}

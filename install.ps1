@@ -204,7 +204,13 @@ function Prepare-Helper($e) {
         if ($hasGo) { return }
         $target = Join-Path $dir $Matches[1]
         $file = Release-Asset (Split-Path $target -Leaf)
-        if (-not $file) { throw "$($e.Title): Hilfsprogramm $(Split-Path $target -Leaf) fehlt im Release - bitte Go installieren (winget install GoLang.Go)." }
+        if (-not $file) {
+            if ($e.Helper -match '--optional') {
+                Say "  $($e.Title): $(Split-Path $target -Leaf) fehlt im Release, die Extension läuft ohne (nur die Zusatzfunktion fehlt)." Yellow
+                return
+            }
+            throw "$($e.Title): Hilfsprogramm $(Split-Path $target -Leaf) fehlt im Release - bitte Go installieren (winget install GoLang.Go)."
+        }
         New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
         Move-Item $file $target -Force
     }

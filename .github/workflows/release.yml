@@ -25,6 +25,7 @@ jobs:
           (cd power-plan && node ../scripts/build-go-helper.mjs helper assets/power-helper.exe)
           (cd signalrgb && node ../scripts/build-go-helper.mjs helper assets/signal-helper.exe --gui)
           (cd window-drag && node ../scripts/build-go-helper.mjs helper assets/drag-helper.exe --gui)
+          (cd jira-moco && node ../scripts/build-go-helper.mjs tray assets/jira-moco-tray.exe --gui)
           node scripts/build-win-auth.mjs win-auth
           (cd win-auth && powershell -NoProfile -Command "Compress-Archive -Path * -DestinationPath ../win-auth.zip")
       - name: Create release
@@ -37,4 +38,5 @@ jobs:
             power-plan/assets/power-helper.exe \
             signalrgb/assets/signal-helper.exe \
             window-drag/assets/drag-helper.exe \
+            jira-moco/assets/jira-moco-tray.exe \
             win-auth.zip

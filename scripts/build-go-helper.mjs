@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 // Builds a Windows helper written in Go into the extension's assets folder.
 //
-//   node ../scripts/build-go-helper.mjs <go-source-dir> <output.exe> [--gui]
+//   node ../scripts/build-go-helper.mjs <go-source-dir> <output.exe> [--gui] [--optional]
+//
+// --optional: the extension works without the helper (jira-moco's tray icon), so a missing
+// Go installation only prints a note instead of failing the build.
 //
 // Used as "predev"/"prebuild" by the extensions that ship a helper (mtr, power-plan,
 // signalrgb). Without Go installed, an existing .exe is kept (e.g. one downloaded
@@ -12,7 +15,7 @@ import { dirname, resolve } from "node:path";
 
 const [source, output, ...flags] = process.argv.slice(2);
 if (!source || !output) {
-  console.error("usage: build-go-helper.mjs <go-source-dir> <output.exe> [--gui]");
+  console.error("usage: build-go-helper.mjs <go-source-dir> <output.exe> [--gui] [--optional]");
   process.exit(2);
 }
 const out = resolve(output);
@@ -21,6 +24,10 @@ const hasGo = spawnSync("go", ["version"], { stdio: "ignore" }).status === 0;
 if (!hasGo) {
   if (existsSync(out)) {
     console.warn(`go not found, keeping existing ${output}`);
+    process.exit(0);
+  }
+  if (flags.includes("--optional")) {
+    console.warn(`go not found, building without the optional ${output}`);
     process.exit(0);
   }
   console.error(

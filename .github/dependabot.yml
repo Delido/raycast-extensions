@@ -8,6 +8,7 @@ updates:
       - /checkmk
       - /cs2-nades
       - /defender-security
+      - /jira-moco
       - /keep-awake
       - /laps-connect
       - /mtr
@@ -40,6 +41,7 @@ updates:
 
   - package-ecosystem: gomod
     directories:
+      - /jira-moco/tray
       - /mtr/probe
       - /power-plan/helper
       - /signalrgb/helper

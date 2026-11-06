@@ -17,6 +17,7 @@ Selbst gebaute [Raycast](https://www.raycast.com)-Extensions für IT-Admin-Allta
 | <img src="checkmk/assets/icon.png" width="28" alt="checkmk"> | **[Checkmk](checkmk/)** | Hosts und Services suchen, Probleme bestätigen, Benachrichtigung bei neuen Problemen | Windows, macOS |
 | <img src="sharepoint/assets/icon.png" width="28" alt="sharepoint"> | **[SharePoint](sharepoint/)** | SharePoint-Seiten und Dokumente durchsuchen | Windows, macOS |
 | <img src="teams/assets/icon.png" width="28" alt="teams"> | **[Microsoft Teams](teams/)** | Personen, Chats, Kanäle, Nachrichten, Status, Meetings | Windows, macOS |
+| <img src="jira-moco/assets/icon.png" width="28" alt="jira-moco"> | **[Jira MOCO Zeiterfassung](jira-moco/)** | Zeit auf Jira-Vorgängen (oder ohne) mit mehreren Timern erfassen, pausieren, wechseln, Timer im Infobereich der Taskleiste, gleichzeitig als Jira-Worklog und MOCO-Leistung auf den Job buchen | Windows, macOS |
 | <img src="snipeit/assets/icon.png" width="28" alt="snipeit"> | **[Snipe-IT](snipeit/)** | Assets, Benutzer, Lizenzen und Zubehör suchen, Assets aus- und einchecken, Inventur und fällige Audits | Windows, macOS |
 | <img src="ssh/assets/icon.png" width="28" alt="ssh"> | **[SSH Sessions](ssh/)** | SSH-Hosts finden und verbinden, zentrale Host-Listen, SOCKS-Tunnel mit Browser, SFTP-Dateibrowser | Windows, macOS |
 | <img src="laps-connect/assets/icon.png" width="28" alt="laps-connect"> | **[LAPS Connect](laps-connect/)** | WireGuard-IP eines Rechners finden, Windows-LAPS-Passwort aus Entra holen, per SSH oder RDP verbinden, mit Passwortsperre | Windows, macOS |
@@ -52,7 +53,7 @@ Voraussetzung: [Raycast](https://www.raycast.com) für Windows. In PowerShell:
 irm https://raw.githubusercontent.com/Delido/raycast-extensions/main/install.ps1 | iex
 ```
 
-Das Skript zeigt eine Auswahl (Nummern, Bereiche wie `1,3,5-7` oder `a` für alle), lädt die Extensions, baut sie und meldet sie in Raycast an. Git brauchst du nicht. Fehlt Node.js, bietet es die Installation per winget an. Die Hilfsprogramme (MTR, Power Plan, SignalRGB, Window Drag) lädt es aus dem neuesten Release, wenn Go nicht installiert ist.
+Das Skript zeigt eine Auswahl (Nummern, Bereiche wie `1,3,5-7` oder `a` für alle), lädt die Extensions, baut sie und meldet sie in Raycast an. Git brauchst du nicht. Fehlt Node.js, bietet es die Installation per winget an. Die Hilfsprogramme (MTR, Power Plan, SignalRGB, Window Drag, Jira MOCO) lädt es aus dem neuesten Release, wenn Go nicht installiert ist.
 
 **Aktualisieren:** dasselbe Kommando ausführen und Enter drücken, dann werden alle installierten Extensions neu gebaut. Ohne Menü, z. B. in Skripten:
 
@@ -76,9 +77,9 @@ npm run dev
 
 Beim ersten Öffnen eines Befehls fragt Raycast nach den Einstellungen (Server-URL, Token usw.). Ändern kannst du sie später unter **Settings → Extensions → \<Extension\>**.
 
-### Windows-Helfer (SignalRGB, MTR, Power Plan, Window Drag)
+### Windows-Helfer (SignalRGB, MTR, Power Plan, Window Drag, Jira MOCO)
 
-Diese Extensions bringen einen kleinen Helfer in Go mit, weil Node.js an die nötigen Windows-Schnittstellen nicht herankommt (ICMP mit TTL, Energiesparpläne, HID-Geräte, Core Audio, globaler Maus-Hook). Keiner davon braucht Administratorrechte.
+Diese Extensions bringen einen kleinen Helfer in Go mit, weil Node.js an die nötigen Windows-Schnittstellen nicht herankommt (ICMP mit TTL, Energiesparpläne, HID-Geräte, Core Audio, globaler Maus-Hook, Symbol im Infobereich). Bei Jira MOCO ist er optional, ohne ihn fehlt nur das Symbol. Keiner davon braucht Administratorrechte.
 
 - **Mit Go 1.26+** (`winget install GoLang.Go`) baut `npm run dev` den Helfer automatisch.
 - **Ohne Go**: die passende `.exe` aus den [Releases](https://github.com/Delido/raycast-extensions/releases) in den Ordner `assets/` der Extension legen, dann `npm run dev`.

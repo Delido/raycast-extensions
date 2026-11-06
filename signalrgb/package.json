@@ -213,7 +213,7 @@
   "dependencies": {
     "@raycast/api": "^2.8.1",
     "@raycast/utils": "^2.3.2",
-    "ws": "^8.18.3"
+    "ws": "^8.22.1"
   },
   "scripts": {
     "build": "ray build",

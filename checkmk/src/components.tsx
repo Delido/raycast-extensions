@@ -18,7 +18,9 @@ import {
   getServices,
   Host,
   hostUrl,
+  inDowntime,
   isHandled,
+  isSoft,
   primaryShortcut,
   scheduleDowntime,
   Service,
@@ -49,10 +51,23 @@ export function hostState(host: Host) {
   return host.has_been_checked ? (HOST_STATES[host.state] ?? PENDING) : PENDING;
 }
 
-function handledAccessories(item: { acknowledged: number; scheduled_downtime_depth: number }) {
+function handledAccessories(item: {
+  acknowledged: number;
+  scheduled_downtime_depth: number;
+  host_scheduled_downtime_depth?: number;
+  state_type?: number;
+  state: number;
+}) {
   return [
+    ...(item.state !== 0 && isSoft(item)
+      ? [{ tag: { value: "SOFT", color: Color.SecondaryText }, tooltip: "Soft state – still being re-checked" }]
+      : []),
     ...(item.acknowledged ? [{ icon: Icon.Checkmark, tooltip: "Acknowledged" }] : []),
-    ...(item.scheduled_downtime_depth ? [{ icon: Icon.Moon, tooltip: "In scheduled downtime" }] : []),
+    ...(item.scheduled_downtime_depth
+      ? [{ icon: Icon.Moon, tooltip: "In scheduled downtime" }]
+      : item.host_scheduled_downtime_depth
+        ? [{ icon: Icon.Moon, tooltip: "Host in scheduled downtime" }]
+        : []),
   ];
 }
 
@@ -230,7 +245,8 @@ function ServiceDetail({ service }: { service: Service }) {
           <Detail.Metadata.TagList title="State">
             <Detail.Metadata.TagList.Item text={state.label} color={state.color} />
             {service.acknowledged ? <Detail.Metadata.TagList.Item text="Acknowledged" /> : null}
-            {service.scheduled_downtime_depth ? <Detail.Metadata.TagList.Item text="Downtime" /> : null}
+            {inDowntime(service) ? <Detail.Metadata.TagList.Item text="Downtime" /> : null}
+            {service.state !== 0 && isSoft(service) ? <Detail.Metadata.TagList.Item text="SOFT" /> : null}
           </Detail.Metadata.TagList>
           <Detail.Metadata.Label title="In State Since" text={formatAge(service.last_state_change)} />
           <Detail.Metadata.Label

@@ -107,10 +107,37 @@
           "default": true
         },
         {
-          "name": "ignoreHandled",
-          "title": "Handled Problems",
-          "label": "Ignore acknowledged problems and downtimes",
-          "description": "Skip problems that are acknowledged or in a scheduled downtime",
+          "name": "stateType",
+          "title": "State Type",
+          "description": "SOFT states are still being re-checked and often disappear by themselves; Checkmk itself only notifies on HARD states",
+          "type": "dropdown",
+          "required": false,
+          "default": "hard",
+          "data": [
+            {
+              "title": "HARD states only",
+              "value": "hard"
+            },
+            {
+              "title": "HARD and SOFT states",
+              "value": "all"
+            }
+          ]
+        },
+        {
+          "name": "ignoreAcknowledged",
+          "title": "Acknowledged",
+          "label": "Ignore acknowledged problems",
+          "description": "Skip problems that are acknowledged",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
+          "name": "ignoreDowntimes",
+          "title": "Downtimes",
+          "label": "Ignore problems in a downtime",
+          "description": "Skip problems in a scheduled downtime – a service also while its host is in a downtime",
           "type": "checkbox",
           "required": false,
           "default": true

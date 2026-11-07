@@ -1,5 +1,11 @@
 # Changelog
 
+
+## [Downtimes and Soft States] - 2026-11-07
+
+- Services count as in downtime while their host is in a downtime (they were still listed and notified)
+- Problem Monitor: separate settings for acknowledged problems and downtimes, new setting for HARD only or HARD and SOFT states
+- Problem lists mark SOFT states
 ## [Fixes] - 2026-11-04
 
 - Problem Monitor: no more "recovered" notifications for services whose host just went down, or for problems that were acknowledged or filtered out

@@ -29,7 +29,8 @@ Den Monitor startest du, indem du **Problem Monitor** einmal von Hand ausführst
 
 - **Check Every**: 1–30 Minuten
 - **Minimum Severity**: nur CRIT / CRIT + UNKNOWN / ab WARN
-- Host-Ausfälle melden, bestätigte Probleme und Downtimes ignorieren, Erholungen melden
+- Host-Ausfälle melden, bestätigte Probleme und Downtimes ignorieren (getrennt einstellbar; ein Service gilt auch als in Downtime, solange sein Host es ist), Erholungen melden
+- **State Type:** nur HARD-Zustände melden (Standard, wie Checkmk selbst) oder auch SOFT-Zustände, die noch nachgeprüft werden
 - **Regex-Filter** für Hosts, Services und auszuschließende Services
 - **Notification**: Windows-/macOS-Benachrichtigung oder Raycast-HUD
 

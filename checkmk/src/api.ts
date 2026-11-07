@@ -10,6 +10,8 @@ export interface Host {
   alias: string;
   address: string;
   state: HostState;
+  /** 0 = SOFT (still being re-checked), 1 = HARD */
+  state_type: number;
   has_been_checked: number;
   plugin_output: string;
   last_state_change: number;
@@ -25,6 +27,8 @@ export interface Service {
   host_name: string;
   description: string;
   state: ServiceState;
+  /** 0 = SOFT (still being re-checked), 1 = HARD */
+  state_type: number;
   has_been_checked: number;
   plugin_output: string;
   long_plugin_output: string;
@@ -32,6 +36,8 @@ export interface Service {
   last_check: number;
   acknowledged: number;
   scheduled_downtime_depth: number;
+  /** a service is in downtime as well while its host is */
+  host_scheduled_downtime_depth: number;
 }
 
 export const HOST_COLUMNS = [
@@ -39,6 +45,7 @@ export const HOST_COLUMNS = [
   "alias",
   "address",
   "state",
+  "state_type",
   "has_been_checked",
   "plugin_output",
   "last_state_change",
@@ -54,6 +61,7 @@ export const SERVICE_COLUMNS = [
   "host_name",
   "description",
   "state",
+  "state_type",
   "has_been_checked",
   "plugin_output",
   "long_plugin_output",
@@ -61,6 +69,7 @@ export const SERVICE_COLUMNS = [
   "last_check",
   "acknowledged",
   "scheduled_downtime_depth",
+  "host_scheduled_downtime_depth",
 ];
 
 /** Livestatus query expression as used by the Checkmk REST API. */
@@ -205,8 +214,20 @@ export function serviceUrl(hostName: string, description: string): string {
   return `${getSiteUrl()}/check_mk/index.py?start_url=${encodeURIComponent(target)}`;
 }
 
-export function isHandled(item: { acknowledged: number; scheduled_downtime_depth: number }): boolean {
-  return item.acknowledged > 0 || item.scheduled_downtime_depth > 0;
+type Handling = { acknowledged: number; scheduled_downtime_depth: number; host_scheduled_downtime_depth?: number };
+
+/** In a scheduled downtime – a service also while its host is (Checkmk treats it the same way). */
+export function inDowntime(item: Handling): boolean {
+  return item.scheduled_downtime_depth > 0 || (item.host_scheduled_downtime_depth ?? 0) > 0;
+}
+
+export function isHandled(item: Handling): boolean {
+  return item.acknowledged > 0 || inDowntime(item);
+}
+
+/** SOFT: the problem is still being re-checked and may go away (Checkmk notifies on HARD states only). */
+export function isSoft(item: { state_type?: number }): boolean {
+  return item.state_type === 0;
 }
 
 export function formatAge(epochSeconds: number): string {

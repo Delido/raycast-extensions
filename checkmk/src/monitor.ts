@@ -1,5 +1,5 @@
 import { environment, getPreferenceValues, LaunchType, LocalStorage, showHUD } from "@raycast/api";
-import { getHosts, getServices, getSiteUrl, hostUrl, isHandled, Query, serviceUrl } from "./api";
+import { getHosts, getServices, getSiteUrl, hostUrl, inDowntime, isSoft, Query, serviceUrl } from "./api";
 import { notify } from "./notify";
 
 interface Problem {
@@ -51,6 +51,11 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Collected> {
   const hostRe = regex(prefs.hostFilter);
   const serviceRe = regex(prefs.serviceFilter);
   const excludeRe = regex(prefs.serviceExclude);
+  const hardOnly = prefs.stateType !== "all";
+  const ignored = (item: Parameters<typeof inDowntime>[0] & { state_type?: number }) =>
+    (prefs.ignoreAcknowledged && item.acknowledged > 0) ||
+    (prefs.ignoreDowntimes && inDowntime(item)) ||
+    (hardOnly && isSoft(item));
   const states = MIN_STATES[prefs.minSeverity] ?? MIN_STATES.crit;
 
   const serviceQuery: Query = {
@@ -69,7 +74,7 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Collected> {
 
   for (const host of hosts) {
     const key = `host:${host.name}`;
-    if (!host.has_been_checked || (hostRe && !hostRe.test(host.name)) || (prefs.ignoreHandled && isHandled(host))) {
+    if (!host.has_been_checked || (hostRe && !hostRe.test(host.name)) || ignored(host)) {
       suppressed.add(key);
       continue;
     }
@@ -89,7 +94,7 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Collected> {
       (hostRe && !hostRe.test(service.host_name)) ||
       (serviceRe && !serviceRe.test(service.description)) ||
       (excludeRe && excludeRe.test(service.description)) ||
-      (prefs.ignoreHandled && isHandled(service)) ||
+      ignored(service) ||
       downHosts.has(service.host_name) // already reported via the host
     ) {
       suppressed.add(key);

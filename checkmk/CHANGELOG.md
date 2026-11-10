@@ -1,6 +1,10 @@
 # Changelog
 
 
+
+## [Checkmk Notification Settings] - 2026-11-10
+
+- Problem Monitor stays quiet while notifications are switched off in Checkmk: globally (Master control, read via the REST API on Checkmk 3.0, otherwise via the Master control snap-in) or for the host / service
 ## [Downtimes and Soft States] - 2026-11-07
 
 - Services count as in downtime while their host is in a downtime (they were still listed and notified)

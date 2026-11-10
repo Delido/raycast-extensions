@@ -1,5 +1,15 @@
 import { environment, getPreferenceValues, LaunchType, LocalStorage, showHUD } from "@raycast/api";
-import { getHosts, getServices, getSiteUrl, hostUrl, inDowntime, isSoft, Query, serviceUrl } from "./api";
+import {
+  getHosts,
+  getServices,
+  getSiteUrl,
+  globalNotificationsEnabled,
+  hostUrl,
+  inDowntime,
+  isSoft,
+  Query,
+  serviceUrl,
+} from "./api";
 import { notify } from "./notify";
 
 interface Problem {
@@ -52,7 +62,15 @@ async function collectProblems(prefs: Preferences.Monitor): Promise<Collected> {
   const serviceRe = regex(prefs.serviceFilter);
   const excludeRe = regex(prefs.serviceExclude);
   const hardOnly = prefs.stateType !== "all";
-  const ignored = (item: Parameters<typeof inDowntime>[0] & { state_type?: number }) =>
+  const ignored = (
+    item: Parameters<typeof inDowntime>[0] & {
+      state_type?: number;
+      notifications_enabled?: number;
+      host_notifications_enabled?: number;
+    },
+  ) =>
+    // notifications switched off in Checkmk for this host / service (for a service also its host)
+    (prefs.respectNotifications && (item.notifications_enabled === 0 || item.host_notifications_enabled === 0)) ||
     (prefs.ignoreAcknowledged && item.acknowledged > 0) ||
     (prefs.ignoreDowntimes && inDowntime(item)) ||
     (hardOnly && isSoft(item));
@@ -160,6 +178,13 @@ export default async function Monitor() {
 
   const known = await readJson<Record<string, Problem>>(KNOWN_KEY);
   await LocalStorage.setItem(KNOWN_KEY, JSON.stringify(current));
+
+  // Global switch in Checkmk's Master control: like Checkmk, stay quiet. What comes up meanwhile is
+  // remembered as known, so switching notifications on again does not bring a burst of old problems.
+  if (prefs.respectNotifications && (await globalNotificationsEnabled()) === false) {
+    if (manual) await showHUD("Checkmk: notifications are switched off (Master control)");
+    return;
+  }
 
   const problemsUrl = `${getSiteUrl()}/check_mk/index.py?start_url=${encodeURIComponent("view.py?view_name=svcproblems")}`;
   const total = Object.keys(current).length;

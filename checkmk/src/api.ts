@@ -17,6 +17,8 @@ export interface Host {
   last_state_change: number;
   acknowledged: number;
   scheduled_downtime_depth: number;
+  /** 0 = notifications for this host are switched off in Checkmk */
+  notifications_enabled: number;
   num_services_ok: number;
   num_services_warn: number;
   num_services_crit: number;
@@ -38,6 +40,9 @@ export interface Service {
   scheduled_downtime_depth: number;
   /** a service is in downtime as well while its host is */
   host_scheduled_downtime_depth: number;
+  /** 0 = notifications for this service are switched off in Checkmk */
+  notifications_enabled: number;
+  host_notifications_enabled: number;
 }
 
 export const HOST_COLUMNS = [
@@ -55,6 +60,7 @@ export const HOST_COLUMNS = [
   "num_services_warn",
   "num_services_crit",
   "num_services_unknown",
+  "notifications_enabled",
 ];
 
 export const SERVICE_COLUMNS = [
@@ -70,6 +76,8 @@ export const SERVICE_COLUMNS = [
   "acknowledged",
   "scheduled_downtime_depth",
   "host_scheduled_downtime_depth",
+  "notifications_enabled",
+  "host_notifications_enabled",
 ];
 
 /** Livestatus query expression as used by the Checkmk REST API. */
@@ -88,12 +96,23 @@ class CheckmkError extends Error {}
 
 /** Minimal HTTP client (node:https) so that self-signed certificates can be allowed. */
 function request<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
+  return send(method, `api/1.0/${path}`, body).then(({ text }) => {
+    try {
+      return (text ? JSON.parse(text) : {}) as T;
+    } catch {
+      throw new CheckmkError("Unexpected response from Checkmk – is the site URL correct?");
+    }
+  });
+}
+
+/** One authenticated request below /check_mk/ (REST API or a GUI page); rejects on non-2xx. */
+function send(method: "GET" | "POST", path: string, body?: unknown): Promise<{ text: string }> {
   const { username, secret, allowInsecure } = getPreferenceValues<Preferences>();
-  const url = new URL(`${getSiteUrl()}/check_mk/api/1.0/${path}`);
+  const url = new URL(`${getSiteUrl()}/check_mk/${path}`);
   const payload = body === undefined ? undefined : JSON.stringify(body);
   const lib = url.protocol === "http:" ? http : https;
 
-  return new Promise<T>((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const req = lib.request(
       url,
       {
@@ -123,11 +142,7 @@ function request<T>(method: "GET" | "POST", path: string, body?: unknown): Promi
             reject(new CheckmkError(message));
             return;
           }
-          try {
-            resolve((text ? JSON.parse(text) : {}) as T);
-          } catch {
-            reject(new CheckmkError("Unexpected response from Checkmk – is the site URL correct?"));
-          }
+          resolve({ text });
         });
       },
     );
@@ -148,6 +163,36 @@ async function collection<T>(domainType: "host" | "service", columns: string[], 
   if (query) params.set("query", JSON.stringify(query));
   const result = await request<Collection<T>>("GET", `domain-types/${domainType}/collections/all?${params}`);
   return result.value.map((item) => item.extensions);
+}
+
+/**
+ * The global "Notifications" switch of the Master control (true/false), or undefined when it cannot be
+ * read. Checkmk 3.0 has a REST endpoint for it; older versions are read from the Master control
+ * snap-in, whose toggle links carry "switch=enable_notifications&state=<target>" (target 1 = now off).
+ */
+export async function globalNotificationsEnabled(): Promise<boolean | undefined> {
+  try {
+    const result = await request<{ value: { extensions: { notifications?: boolean } }[] }>(
+      "GET",
+      "domain-types/master_control/collections/all",
+    );
+    const states = result.value.map((site) => site.extensions.notifications).filter((n) => n !== undefined);
+    if (states.length) return states.some(Boolean);
+  } catch {
+    // older Checkmk
+  }
+  try {
+    const { text } = await send("GET", "sidebar_snapin.py?names=master_control");
+    // one toggle link per switch and site; the parameter order differs between versions
+    const targets = [...text.matchAll(/switch_master_state\.py\?([^'"\s]*)/g)]
+      .map((m) => new URLSearchParams(m[1].replace(/&amp;/g, "&")))
+      .filter((params) => params.get("switch") === "enable_notifications")
+      .map((params) => params.get("state"));
+    if (targets.length) return targets.some((target) => target === "0");
+  } catch {
+    // no access to the snap-in
+  }
+  return undefined;
 }
 
 export function getHosts(query?: Query) {

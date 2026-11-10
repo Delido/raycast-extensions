@@ -125,6 +125,15 @@
           ]
         },
         {
+          "name": "respectNotifications",
+          "title": "Checkmk Notification Settings",
+          "label": "Stay quiet where Checkmk does not notify",
+          "description": "No notification while notifications are switched off globally (Master control – the Checkmk user needs the permission for the Master control snap-in, admins have it) or for the host / service (a service also when its host has notifications off)",
+          "type": "checkbox",
+          "required": false,
+          "default": true
+        },
+        {
           "name": "ignoreAcknowledged",
           "title": "Acknowledged",
           "label": "Ignore acknowledged problems",
